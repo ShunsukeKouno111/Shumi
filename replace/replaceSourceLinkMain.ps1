@@ -127,6 +127,45 @@ function Update-RedmineSourceLink {
             }
         }
     }
+
+    try {
+        $script:count = 0
+        foreach ($issue in $changedIssues) {
+            "#$($issue.id) is updating."
+            $description = [MySql.Data.MySqlClient.MySqlHelper]::EscapeString($issue.description)
+            $mySqlCommandResult = & $getMySqlDbCommand
+            $command = $mySqlCommandResult.Command
+            $updateSql = "UPDATE issues set description = '$description' where id = $($issue.id);"
+            $command.CommandText = $updateSql
+            $command.ExecuteNonQuery() > $null
+            "#$($issue.id) is updated."
+            $script:count++
+            if ($script:count % 10000 -eq 0) {
+                "$script:count issues is updated."
+                $date = Get-Date
+                "$script:count issues is updated. time:$date" | Out-File $timeLog -Append -encoding UTF8
+            }
+            if ($mySqlCommandResult) {
+                $mySqlCleanup = $mySqlCommandResult.Cleanup
+                if ($mySqlCleanup) {
+                    & $mySqlCleanup
+                }
+            }
+            trap {
+                Out-File -InputObject $updateSql -FilePath $errorLogPath -Encoding (COnvertTo-EncodingParameter (New-Object Text.UTF8Encoding $true)) -NoNewLine
+                break
+            }
+        }
+    }
+    finally {
+        if ($mySqlCommandResult) {
+            $mySqlCleanup = $mySqlCommandResult.Cleanup
+            if ($mySqlCleanup) {
+                & $mySqlCleanup
+            }
+        }
+    }
 }
 
-Update-RedmineSourceLink "D:\GitRepository\mappingfile\pjm-dev" "http://ksvnrp05.isid.co.jp/pjm-dev"
+Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\pjm-dev" -SVNRootURL "http://ksvnrp05.isid.co.jp/pjm-dev"
+Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\iquavis-plugin" -SVNRootURL "http://ksvnrp16.isid.co.jp/iquavis-plugin"
