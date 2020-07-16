@@ -12,8 +12,11 @@ function Update-SourceLink {
         return $revision_hash[$args[0]]
     }
 
+    if ($SourceLink.Contains("/doc/")) {
+        $githubLink = $SourceLink
+    }
     #ケース2,3,5,6,8,9,11,12
-    if ($SourceLink.Contains("@")) {
+    elseif ($SourceLink.Contains("@")) {
         $array = $SourceLink -split "(trunk|branches/.*?)/" -split "@" -split "#"
         $directoryPath = $array[2]
         $revision = $array[3] -replace "`"", ""
