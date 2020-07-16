@@ -72,12 +72,12 @@ Describe "Update-DescriptionSourceLink" {
     It "ケース11" {
         $SVNSourceLink = "source:`"plugin/DOORS/branches/1.343/src/Project/Client/Client.DOORS/PluginInfoData.cs@157464`""
         $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
-        $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS-DOORS/commit/cd6699cc3832cafa5db31f67b94d1cfded472350#diff-937ede871a50d9d43e79b35cb21376ab"
+        $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS-DOORS/commit/b460616f2bdb4819a50981bdf2c713b83fa09c7a#diff-937ede871a50d9d43e79b35cb21376ab"
     }
     It "ケース12" {
         $SVNSourceLink = "source:`"plugin/DOORS/branches/1.343/src/Project/Client/Client.DOORS/PluginInfoData.cs@157464#L15`""
         $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
-        $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS-DOORS/commit/cd6699cc3832cafa5db31f67b94d1cfded472350#diff-937ede871a50d9d43e79b35cb21376abL15"
+        $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS-DOORS/commit/b460616f2bdb4819a50981bdf2c713b83fa09c7a#diff-937ede871a50d9d43e79b35cb21376abL15"
     }
     It "ケース13" {
         $SVNSourceLink = "source:../revisions/172558/diff/trunk/src/net/Project/Client/Api/Operation/IOperationApi.cs "

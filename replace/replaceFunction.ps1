@@ -12,27 +12,38 @@ function Update-SourceLink {
         return $revision_hash[$args[0]]
     }
 
+    #ケース2,3,5,6,8,9,11,12
     if ($SourceLink.Contains("@")) {
-        #ケース2,3,5,6,8,9,11,12
-
         $array = $SourceLink -split "(trunk|branches/.*?)/" -split "@" -split "#"
         $directoryPath = $array[2]
         $revision = $array[3] -replace "`"", ""
         $md5 = Get-MD5Hash $directoryPath
         $hash_repository = & $getHashRepository $revision.Trim()
-        $githubLink = $SourceLink -replace "source:(`"|)(trunk|branches/.*?|plugin/.*?/trunk)/[^@]*?", "$($hash_repository.Values)/"
+        $githubLink = $SourceLink -replace "source:(`"|)(trunk|branches/.*?|plugin/.*?/(trunk|branches/.*?))/[^@]*?", "$($hash_repository.Values)/"
         $githubLink = $githubLink -replace $directoryPath, ""
         $githubLink = $githubLink -replace "@\d{1,6}", "commit/$($hash_repository.keys)#diff-$md5"
         $githubLink = $githubLink -replace "#L", "L"
     }
-    else {
-        $githubLink = $SourceLink -replace "source:(`"|)trunk/", "https://github.com/ISID/iQUAVIS/blob/master/" #ケース1
-        $githubLink = $githubLink -replace "source:(`"|)branches/", "https://github.com/ISID/iQUAVIS/blob/" #ケース4
-        $githubLink = $githubLink -replace "source:(`"|)plugin/([^/]*?)", "https://github.com/ISID/iQUAVIS-`$1" #ケース7
+    #ケース1
+    elseif ($SourceLink -match "source:(`"|)trunk/") {
+        $githubLink = $SourceLink -replace "source:(`"|)trunk/", "https://github.com/ISID/iQUAVIS/blob/master/"
+    }
+    #ケース4
+    elseif ($SourceLink -match "source:(`"|)branches/") {
+        $githubLink = $SourceLink -replace "source:(`"|)branches/", "https://github.com/ISID/iQUAVIS/blob/"
+    }
+    #ケース7,10
+    elseif ($SourceLink -match "source:(`"|)plugin/([^/]*?)") {
+        $githubLink = $SourceLink -replace "source:(`"|)plugin/([^/]*?)", "https://github.com/ISID/iQUAVIS-" #ケース7
         $githubLink = $githubLink -replace "trunk", "blob/master" #ケース7
         $githubLink = $githubLink -replace "branches", "blob" #ケース10
     }
-    $githubLink = $githubLink -replace "`"", ""
+    else {
+        $githubLink = $SourceLink
+    }
+    if ($githubLink -ne $SourceLink) {
+        $githubLink = $githubLink -replace "`"", ""
+    }
     return $githubLink
 }
 
@@ -89,7 +100,6 @@ function Update-DescriptionSourceLink {
         $Description
     )
 
-    #$updatedDescription = [regex]::Replace($Description, "source:(`"|).+?`"", { Update-SourceLink($args[0].Groups[0].Value) })
     $updatedDescription = [regex]::Replace($Description, "source:`".+?`"", { Update-SourceLink($args[0].Groups[0].Value) })
     $updatedDescription = [regex]::Replace($updatedDescription, "source:.+?\s", { Update-SourceLink($args[0].Groups[0].Value) })
     return $updatedDescription
