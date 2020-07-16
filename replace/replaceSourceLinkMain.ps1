@@ -91,7 +91,7 @@ function Update-RedmineSourceLink {
         on ISSUES.project_id = REPO.project_id
         where root_url ='$SVNRootURL'
         order by ISSUES.Id;"
-    $schemaName = "[$($_.SchemaName)]"
+    $schemaName = "[dbo]"
     try {
         $mySqlCommandResult = & $getMySqlDbCommand
         $command = $mySqlCommandResult.Command
@@ -99,8 +99,11 @@ function Update-RedmineSourceLink {
         $script:count = 0
         $changedIssues = New-Object System.Collections.ArrayList
         $mySqlReader = $command.ExecuteReader()
-        if ($mySqlReader.Read()) {
+        while ($mySqlReader.Read()) {
             $mySqlValues = & $getReaderValues $mySqlReader
+            if ($mySqlValues -isnot [array]) {
+                $mySqlValues = @($mySqlValues)
+            }
             $issue = New-Object PSCustomObject -Property @{id = ""; description = "" }
             $issue.id = $mySqlValues[0]
             $originalDescription = $mySqlValues[1]
@@ -125,3 +128,5 @@ function Update-RedmineSourceLink {
         }
     }
 }
+
+Update-RedmineSourceLink "D:\GitRepository\mappingfile\pjm-dev" "http://ksvnrp05.isid.co.jp/pjm-dev"
