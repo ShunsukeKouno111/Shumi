@@ -117,6 +117,10 @@ function Update-RedmineSourceLink {
                 $date = Get-Date
                 "$script:count issues is checked. time:$date" | Out-File $timeLog -Append -encoding UTF8
             }
+            trap {
+                Out-File -InputObject $issue.id -FilePath $errorLogPath -Encoding (COnvertTo-EncodingParameter (New-Object Text.UTF8Encoding $true)) -NoNewLine
+                break
+            }
         }
     }
     finally {
