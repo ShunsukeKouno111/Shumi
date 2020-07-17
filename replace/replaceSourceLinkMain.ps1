@@ -12,7 +12,7 @@ function Update-RedmineSourceLink {
     & (Join-Path $PSScriptRoot 'ModuleLoader.ps1')
     Set-DBInstance "localhost\SQLEXPRESS"
 
-    $errorLogPath = Join-Path $PSScriptRoot "nothinghash.log"
+    $errorLogPath = Join-Path $PSScriptRoot "error.log"
     $timeLog = Join-Path $PSScriptRoot "timestamp.log"
     $revision_hash = @{ }
     $script:count = 0
