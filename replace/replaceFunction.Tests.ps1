@@ -79,9 +79,24 @@ Describe "Update-DescriptionSourceLink" {
         $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
         $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS-DOORS/commit/b460616f2bdb4819a50981bdf2c713b83fa09c7a#diff-937ede871a50d9d43e79b35cb21376abL15"
     }
-    It "ケース13" {
+    It "ケース13" { #../revisions/172558が対象リビジョン、trunk/src/net/Project/Client/Api/Operation/IOperationApi.csが指すファイル
         $SVNSourceLink = "source:../revisions/172558/diff/trunk/src/net/Project/Client/Api/Operation/IOperationApi.cs "
         $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
-        $GitHubSourceLink | Should Be $SVNSourceLink
+        $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/commit/236e12385eac1d65c6281a5dce90d9e1d3616cf0#diff-deb1688ce2dcebeb800ca1e539570989"
+    }
+    It "ケース14" { #../diff/ をRemoveすればいける?
+        $SVNSourceLink = "pjm:source:../diff/trunk/src/net/Project/Server/Mail/Mail/Triggers/ITaskAlertBatchMailTrigger.cs@125670 "
+        $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
+        $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/commit/2a610b370965fb100c035a0c34ea7337e226a40b#diff-e029a624dce3132299a83c8926efea0f "
+    }
+    It "ケース15" { # リポジトリ名/compare/{コミットハッシュ}...{コミットハッシュ}#diff-{MD5}
+        $SVNSourceLink = "source:`"../diff/trunk/src/net/Project/Client/Infrastructure/Services/MessageDialog/MessageDialog.cs?rev=172609&rev_to=171813`""
+        $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
+        $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/compare/f772dd003c3cbdf559919bc19eeee07997c88a8e...935adcc7ec6383136bf3a150ff1cd2188ef20e74#diff-628a73a4c57f3a0c8b105da5661aea84"
+    }
+    It "ケース16" { #14のダブルコーテーション版
+        $SVNSourceLink = "pjm:source:`"../diff/trunk/src/net/Project/Server/Mail/Mail/Triggers/ITaskAlertBatchMailTrigger.cs@125670`""
+        $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
+        $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/commit/2a610b370965fb100c035a0c34ea7337e226a40b#diff-e029a624dce3132299a83c8926efea0f"
     }
 }

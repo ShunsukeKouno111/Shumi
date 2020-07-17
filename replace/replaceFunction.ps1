@@ -12,6 +12,28 @@ function Update-SourceLink {
         return $revision_hash[$args[0]]
     }
 
+    if ($SourceLink.Contains("../diff/")) {
+        $SourceLink = $SourceLink -replace "../diff/", ""
+    }
+    if ($SourceLink.Contains("../revisions/")) {
+        #source:../revisions/172558/diff/trunk/src/net/Project/Client/Api/Operation/IOperationApi.cs
+        #source:trunk/src/net/Project/Client/Api/Operation/IOperationApi.cs@172558
+        $array = $SourceLink -split "/"
+        $script:count = 0
+        foreach ($value in $array) {
+            if ($value -eq "revisions") {
+                $revision = $array[$script:count + 1]
+                break
+            }
+            $script:count++
+        }
+
+        $SourceLink = $SourceLink.TrimEnd() -replace "../revisions/\d{1,6}/diff/", ""
+        $SourceLink = "$SourceLink@$revision"
+    }
+    if ($SourceLink.Contains("pjm:source")) {
+        $SourceLink = $SourceLink -replace "pjm:", ""
+    }
     if ($SourceLink.Contains("/doc/")) {
         $githubLink = $SourceLink
     }
@@ -26,6 +48,19 @@ function Update-SourceLink {
         $githubLink = $githubLink -replace $directoryPath, ""
         $githubLink = $githubLink -replace "@\d{1,6}", "commit/$($hash_repository.keys)#diff-$md5"
         $githubLink = $githubLink -replace "#L", "L"
+    }
+    elseif ($SourceLink.Contains("?rev=")) {
+        $array = $SourceLink -split "(trunk|branches/.*?)/" -split ".rev=" -split ".rev_to="
+        $directoryPath = $array[2]
+        $revision = $array[3] -replace "`"", ""
+        $toRevision = $array[4] -replace "`"", ""
+        $md5 = Get-MD5Hash $directoryPath
+        $hash_repository = & $getHashRepository $revision.Trim()
+        $toHash_repository = & $getHashRepository $toRevision.Trim()
+        $githubLink = $SourceLink -replace "source:(`"|)(trunk|branches/.*?|plugin/.*?/(trunk|branches/.*?))/[^@]*?", "$($hash_repository.Values)/"
+        $githubLink = $githubLink -replace $directoryPath, ""
+        #?rev=172609&rev_to=171813
+        $githubLink = $githubLink -replace ".rev=\d{1,6}.rev_to=\d{1,6}", "compare/$($hash_repository.keys)...$($toHash_repository.keys)#diff-$md5"
     }
     #ケース1
     elseif ($SourceLink -match "source:(`"|)trunk/") {
@@ -103,7 +138,7 @@ function Update-DescriptionSourceLink {
         $Description
     )
 
-    $updatedDescription = [regex]::Replace($Description, "source:`".+?`"", { Update-SourceLink($args[0].Groups[0].Value) })
-    $updatedDescription = [regex]::Replace($updatedDescription, "source:.+?\s", { Update-SourceLink($args[0].Groups[0].Value) })
+    $updatedDescription = [regex]::Replace($Description, "(pjm:|)source:`".+?`"", { Update-SourceLink($args[0].Groups[0].Value) })
+    $updatedDescription = [regex]::Replace($updatedDescription, "(pjm:|)source:.+?\s", { Update-SourceLink($args[0].Groups[0].Value) })
     return $updatedDescription
 }
