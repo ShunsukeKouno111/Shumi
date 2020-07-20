@@ -99,9 +99,14 @@ Describe "Update-DescriptionSourceLink" {
         $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
         $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/compare/f772dd003c3cbdf559919bc19eeee07997c88a8e...935adcc7ec6383136bf3a150ff1cd2188ef20e74#diff-628a73a4c57f3a0c8b105da5661aea84 "
     }
-    It "ケース17" { #14のダブルコーテーション版
+    It "ケース17" {
+        $SVNSourceLink = "iq-core:source:`"../diff/trunk/src/net/Project/Server/Service/Web/Api/WebApi/Controllers/TaskReferenceController.cs\?rev=159409&rev_to=156308`""
+        $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
+        $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/compare/660be9513d2764a6fb27746fc45d4c07388abdea...0e648196cad24d6831b73153db29eda2c3d10273#diff-5b2cad33ef9da6d628fd8870adfb6aec "
+    }
+    It "ケース18" { #14のダブルコーテーション版
         $SVNSourceLink = "pjm:source:`"../diff/trunk/src/net/Unit Test/Server/Mail\Test.Mail/Triggers/TaskAlertBatchMailTriggerTest.cs@125670`""
         $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
-        $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/commit/2a610b370965fb100c035a0c34ea7337e226a40b#diff-b51019663c33eb573399dfa0951b13bd "
+        $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/commit/2a610b370965fb100c035a0c34ea7337e226a40b#diff-5e0a2e0b1934c0d2fc8e334f24f1a4d2 "
     }
 }

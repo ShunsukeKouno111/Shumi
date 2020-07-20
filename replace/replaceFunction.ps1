@@ -1,5 +1,5 @@
 ﻿$revision_hash = @{ }
-$outputCsv = @()
+$exportFile = Join-Path $PSScriptRoot "rewritelog.csv"
 
 function Update-SourceLink {
     Param(
@@ -7,7 +7,7 @@ function Update-SourceLink {
         $SourceLink
     )
 
-    $mappingData = New-Object PSCustomObject -Property @{ ticket = ""; svn = ""; git = "" }
+    $mappingData = New-Object PSCustomObject -Property @{ svn = ""; git = "" }
     $mappingData.svn = $SourceLink
     # テスト用
     #$revision_hash = Get-RevisionMappingFile "D:\GitRepository\Shumi\replace\pjm-dev"
@@ -65,8 +65,8 @@ function Update-SourceLink {
     elseif ($svnSourceLink.Contains("?rev=")) {
         $array = $svnSourceLink -split "(trunk|branches/.*?)/" -split "(\\|).rev=" -split ".rev_to="
         $directoryPath = $array[2]
-        $revision = $array[3] -replace "`"", ""
-        $toRevision = $array[4] -replace "`"", ""
+        $revision = $array[4] -replace "`"", ""
+        $toRevision = $array[5] -replace "`"", ""
         if (-not $revision) {
             $mappingData.git = $githubLink
             $outputCsv += $mappingData
@@ -75,9 +75,7 @@ function Update-SourceLink {
         $md5 = Get-MD5Hash $directoryPath
         $hash_repository = & $getHashRepository $revision.Trim()
         $toHash_repository = & $getHashRepository $toRevision.Trim()
-        $githubLink = $svnSourceLink -replace "source:(`"|)(trunk|branches/.*?|plugin/.*?/(trunk|branches/.*?))/[^@]*?", "$($hash_repository.Values)/"
-        $githubLink = $githubLink -replace $directoryPath, ""
-        $githubLink = $githubLink -replace ".rev=\d{1,6}.rev_to=\d{1,6}", "compare/$($hash_repository.keys)...$($toHash_repository.keys)#diff-$md5"
+        $githubLink = "$($hash_repository.Values)/compare/$($hash_repository.keys)...$($toHash_repository.keys)#diff-$md5"
     }
     #ケース1
     elseif ($svnSourceLink -match "source:(`"|)trunk/") {
@@ -102,7 +100,7 @@ function Update-SourceLink {
     }
 
     $mappingData.git = $githubLink
-    $outputCsv += $mappingData
+    $mappingData | Export-Csv $exportFile -Append -encoding UTF8
 
     return $githubLink
 }
@@ -178,7 +176,6 @@ function Update-RedmineSourceLink {
 
     $errorLogPath = Join-Path $PSScriptRoot "error.log"
     $timeLog = Join-Path $PSScriptRoot "timestamp.log"
-    $exportFile = Join-Path $PSScriptRoot "rewritelog.csv"
     $script:count = 0
 
     "importing mapping file."
@@ -271,10 +268,10 @@ function Update-RedmineSourceLink {
             $issue = New-Object PSCustomObject -Property @{id = ""; description = "" }
             $issue.id = $mySqlValues[0]
             $originalDescription = $mySqlValues[1]
+            #ログで使用
             $issue.description = Update-DescriptionSourceLink -Description $originalDescription -ticketNum $issue.id
             if ($originalDescription -ne $issue.description) {
                 $changedIssues.Add($issue) | Out-Null
-
             }
             $script:count++
             if ($script:count % 10000 -eq 0) {
@@ -325,7 +322,6 @@ function Update-RedmineSourceLink {
                 break
             }
         }
-        $outputCsv | Export-Csv $exportFile -Encoding UTF8 -NoTypeInformation
     }
     finally {
         if ($mySqlCommandResult) {
