@@ -12,12 +12,19 @@ function Update-SourceLink {
         return $revision_hash[$args[0]]
     }
 
+    if ($SourceLink.Contains("/doc/")) {
+        return $SourceLink
+    }
     if ($SourceLink.Contains("../diff/")) {
         $SourceLink = $SourceLink -replace "../diff/", ""
     }
+    if ($SourceLink.Contains("pjm:source")) {
+        $SourceLink = $SourceLink -replace "pjm:", ""
+    }
+    if ($SourceLink.Contains("\")) {
+        $SourceLink = $SourceLink -replace "\\", "\\"
+    }
     if ($SourceLink.Contains("../revisions/")) {
-        #source:../revisions/172558/diff/trunk/src/net/Project/Client/Api/Operation/IOperationApi.cs
-        #source:trunk/src/net/Project/Client/Api/Operation/IOperationApi.cs@172558
         $array = $SourceLink -split "/"
         $script:count = 0
         foreach ($value in $array) {
@@ -27,27 +34,29 @@ function Update-SourceLink {
             }
             $script:count++
         }
-
         $SourceLink = $SourceLink.TrimEnd() -replace "../revisions/\d{1,6}/diff/", ""
         $SourceLink = "$SourceLink@$revision"
     }
-    if ($SourceLink.Contains("pjm:source")) {
-        $SourceLink = $SourceLink -replace "pjm:", ""
-    }
-    if ($SourceLink.Contains("/doc/")) {
-        $githubLink = $SourceLink
-    }
+
     #ケース2,3,5,6,8,9,11,12
-    elseif ($SourceLink.Contains("@")) {
+    if ($SourceLink.Contains("@")) {
         $array = $SourceLink -split "(trunk|branches/.*?)/" -split "@" -split "#"
         $directoryPath = $array[2]
         $revision = $array[3] -replace "`"", ""
+        $line = $array[4] -replace "`"", ""
         $md5 = Get-MD5Hash $directoryPath
         $hash_repository = & $getHashRepository $revision.Trim()
-        $githubLink = $SourceLink -replace "source:(`"|)(trunk|branches/.*?|plugin/.*?/(trunk|branches/.*?))/[^@]*?", "$($hash_repository.Values)/"
-        $githubLink = $githubLink -replace $directoryPath, ""
-        $githubLink = $githubLink -replace "@\d{1,6}", "commit/$($hash_repository.keys)#diff-$md5"
-        $githubLink = $githubLink -replace "#L", "L"
+        # MEMO : リビジョンをコミットハッシュに変換する際にTrimした文末空白を付け直すため
+        # 例 : "source:trunk~~~@125670 "
+        # if ((-not $line) -and ($SourceLink -notcontains "`"")) {
+        #     $line = " "
+        # }
+        $githubLink = "$($hash_repository.Values)/commit/$($hash_repository.keys)#diff-$md5$line"
+        # $githubLink = $SourceLink -replace "source:(`"|)(trunk|branches/.*?|plugin/.*?/(trunk|branches/.*?))/[^@]*?", "$($hash_repository.Values)/"
+        # $githubLink = $githubLink -replace $directoryPath, ""
+        # $githubLink = $githubLink -replace "@\d{1,6}", "commit/$($hash_repository.keys)#diff-$md5"
+        # $githubLink = $githubLink -replace "#L", "L"
+
     }
     elseif ($SourceLink.Contains("?rev=")) {
         $array = $SourceLink -split "(trunk|branches/.*?)/" -split ".rev=" -split ".rev_to="
@@ -81,6 +90,7 @@ function Update-SourceLink {
     }
     if ($githubLink -ne $SourceLink) {
         $githubLink = $githubLink -replace "`"", ""
+        $githubLink = $githubLink + " "
     }
     return $githubLink
 }
