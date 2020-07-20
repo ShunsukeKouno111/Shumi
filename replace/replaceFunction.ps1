@@ -78,18 +78,21 @@ function Update-SourceLink {
         $githubLink = "$($hash_repository.Values)/compare/$($hash_repository.keys)...$($toHash_repository.keys)#diff-$md5"
     }
     #ケース1
-    elseif ($svnSourceLink -match "source:(`"|)trunk/") {
-        $githubLink = $svnSourceLink -replace "source:(`"|)trunk/", "https://github.com/ISID/iQUAVIS/blob/master/"
+    elseif ($svnSourceLink -match "source:(`"|)trunk(/|\\)") {
+        $githubLink = $svnSourceLink -replace "source:(`"|)trunk(/|\\)", "https://github.com/ISID/iQUAVIS/blob/master/"
     }
     #ケース4
-    elseif ($svnSourceLink -match "source:(`"|)branches/") {
-        $githubLink = $svnSourceLink -replace "source:(`"|)branches/", "https://github.com/ISID/iQUAVIS/blob/"
+    elseif ($svnSourceLink -match "source:(`"|)branches(/|\\)") {
+        $githubLink = $svnSourceLink -replace "source:(`"|)branches(/|\\)", "https://github.com/ISID/iQUAVIS/blob/"
     }
     #ケース7,10
     elseif ($svnSourceLink -match "source:(`"|)plugin/([^/]*?)") {
         $githubLink = $svnSourceLink -replace "source:(`"|)plugin/([^/]*?)", "https://github.com/ISID/iQUAVIS-" #ケース7
         $githubLink = $githubLink -replace "trunk", "blob/master" #ケース7
         $githubLink = $githubLink -replace "branches", "blob" #ケース10
+    }
+    elseif ($svnSourceLink.Contains("#L")) {
+        $githubLink = $svnSourceLink -replace "#", ""
     }
     else {
         $githubLink = $SourceLink
