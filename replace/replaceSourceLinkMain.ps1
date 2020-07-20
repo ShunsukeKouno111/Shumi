@@ -29,15 +29,15 @@ function Update-RedmineSourceLink {
             $revision = $csvline.revision
             $branch = $csvline.branch
             $hash_repository = @{ }
-            $hash_repository.Add($csvline.hash, $repositoryPath) > $null
+            $hash_repository.Add($csvline.hash, $repositoryPath) | Out-Null
             if ($revision_hash.ContainsKey($revision)) {
                 if ($branch -eq "refs/svn/root/trunk") {
-                    $revision_hash.Remove($revision) > $null
-                    $revision_hash.Add($revision, $hash_repository) > $null
+                    $revision_hash.Remove($revision) | Out-Null
+                    $revision_hash.Add($revision, $hash_repository) | Out-Null
                 }
             }
             elseif ($branch -ne '') {
-                $revision_hash.Add($revision, $hash_repository) > $null
+                $revision_hash.Add($revision, $hash_repository) | Out-Null
             }
             if ($script:count % 10000 -eq 0) {
                 "$script:count revision imported."
@@ -109,7 +109,7 @@ function Update-RedmineSourceLink {
             $originalDescription = $mySqlValues[1]
             $issue.description = Update-DescriptionSourceLink $originalDescription
             if ($originalDescription -ne $issue.description) {
-                $changedIssues.Add($issue) > $null
+                $changedIssues.Add($issue) | Out-Null
             }
             $script:count++
             if ($script:count % 10000 -eq 0) {
@@ -141,7 +141,7 @@ function Update-RedmineSourceLink {
             $command = $mySqlCommandResult.Command
             $updateSql = "UPDATE issues set description = '$description' where id = $($issue.id);"
             $command.CommandText = $updateSql
-            $command.ExecuteNonQuery() > $null
+            $command.ExecuteNonQuery() | Out-Null
             "#$($issue.id) is updated."
             $script:count++
             if ($script:count % 10000 -eq 0) {
