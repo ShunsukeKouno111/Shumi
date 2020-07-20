@@ -23,15 +23,19 @@ function Update-SourceLink {
         $outputCsv += $mappingData
         return $SourceLink
     }
+    if ($svnSourceLink.Contains("\\")) {
+        $svnSourceLink = $svnSourceLink -replace "\\", "/"
+    }
     if ($svnSourceLink.Contains("../diff/")) {
         $svnSourceLink = $svnSourceLink -replace "../diff/", ""
     }
     if ($svnSourceLink.Contains("pjm:")) {
         $svnSourceLink = $svnSourceLink -replace "pjm:source:/", "source:"
     }
-    if ($svnSourceLink.Contains("\\")) {
-        $svnSourceLink = $svnSourceLink -replace "\\", "/"
+    if ($svnSourceLink.Contains("iq-core:")) {
+        $svnSourceLink = $svnSourceLink -replace "iq-core:source:/", "source:"
     }
+
     if ($svnSourceLink.Contains("../revisions/")) {
         $array = $svnSourceLink -split "/"
         $script:count = 0
