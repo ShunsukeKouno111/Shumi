@@ -7,6 +7,8 @@ function Update-SourceLink {
         $SourceLink
     )
 
+    $mappingData = New-Object PSCustomObject -Property @{ ticket = ""; svn = ""; git = "" }
+    $mappingData.svn = $SourceLink
     # テスト用
     #$revision_hash = Get-RevisionMappingFile "D:\GitRepository\Shumi\replace\pjm-dev"
 
@@ -17,6 +19,8 @@ function Update-SourceLink {
     }
 
     if ($svnSourceLink.Contains("/doc/")) {
+        $mappingData.git = $githubLink
+        $outputCsv += $mappingData
         return $SourceLink
     }
     if ($svnSourceLink.Contains("../diff/")) {
@@ -48,6 +52,8 @@ function Update-SourceLink {
         $directoryPath = $array[2]
         $revision = $array[3] -replace "`"", ""
         if (-not $revision) {
+            $mappingData.git = $githubLink
+            $outputCsv += $mappingData
             return $SourceLink
         }
         $line = $array[4] -replace "`"", ""
@@ -57,11 +63,13 @@ function Update-SourceLink {
 
     }
     elseif ($svnSourceLink.Contains("?rev=")) {
-        $array = $svnSourceLink -split "(trunk|branches/.*?)/" -split ".rev=" -split ".rev_to="
+        $array = $svnSourceLink -split "(trunk|branches/.*?)/" -split "(\\|).rev=" -split ".rev_to="
         $directoryPath = $array[2]
         $revision = $array[3] -replace "`"", ""
         $toRevision = $array[4] -replace "`"", ""
         if (-not $revision) {
+            $mappingData.git = $githubLink
+            $outputCsv += $mappingData
             return $SourceLink
         }
         $md5 = Get-MD5Hash $directoryPath
@@ -92,8 +100,7 @@ function Update-SourceLink {
         $githubLink = $githubLink -replace "`"", ""
         $githubLink = $githubLink + " "
     }
-    $mappingData = New-Object PSCustomObject -Property @{ ticket = ""; svn = ""; git = "" }
-    $mappingData.svn = $SourceLink
+
     $mappingData.git = $githubLink
     $outputCsv += $mappingData
 
@@ -153,8 +160,8 @@ function Update-DescriptionSourceLink {
         $Description
     )
 
-    $updatedDescription = [regex]::Replace($Description, "(pjm:|)source:`".+?`"", { Update-SourceLink($args[0].Groups[0].Value) })
-    $updatedDescription = [regex]::Replace($updatedDescription, "(pjm:|)source:.+?(\s|\r|\n|\r\n)", { Update-SourceLink($args[0].Groups[0].Value) })
+    $updatedDescription = [regex]::Replace($Description, "(pjm:|iq-core:|)source:`".+?`"", { Update-SourceLink($args[0].Groups[0].Value) })
+    $updatedDescription = [regex]::Replace($updatedDescription, "(pjm:|iq-core:|)source:.+?(\s|\r|\n|\r\n)", { Update-SourceLink($args[0].Groups[0].Value) })
     return $updatedDescription
 }
 
@@ -330,5 +337,5 @@ function Update-RedmineSourceLink {
     }
 }
 
-#Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\pjm-dev" -SVNRootURL "http://ksvnrp05.isid.co.jp/pjm-dev"
-#Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\iquavis-plugin" -SVNRootURL "http://ksvnrp16.isid.co.jp/iquavis-plugin"
+Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\pjm-dev" -SVNRootURL "http://ksvnrp05.isid.co.jp/pjm-dev"
+Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\iquavis-plugin" -SVNRootURL "http://ksvnrp16.isid.co.jp/iquavis-plugin"
