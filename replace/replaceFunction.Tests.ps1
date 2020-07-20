@@ -1,12 +1,12 @@
 ﻿$here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path) -replace '\.Tests\.', '.'
 . "$here\$sut"
-
+$ticket = 0;
 
 Describe "Update-DescriptionSourceLink" {
     # It "ケース1" {
     #     $SVNSourceLink = "ccc source:`"trunk/src/net/Script/Net-Build.ps1`" fff"
-    #     $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
+    #     $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink $ticket
     #     $GitHubSourceLink | Should Be "ccc https://github.com/ISID/iQUAVIS/blob/master/src/net/Script/Net-Build.ps1  fff"
     # }
     # It "ケース1 -ダブルコーテーションなし-" {
@@ -89,16 +89,16 @@ Describe "Update-DescriptionSourceLink" {
     #     $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
     #     $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/commit/2a610b370965fb100c035a0c34ea7337e226a40b#diff-e029a624dce3132299a83c8926efea0f "
     # }
-    It "ケース15" { #../diff/ をRemoveすればいける?
-        $SVNSourceLink = "pjm:source:/trunk/src/net/Project/Server/Mail/Mail/Triggers/ProjectModel.cs "
-        $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
-        $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/blob/master/src/net/Project/Server/Mail/Mail/Triggers/ProjectModel.cs  "
-    }
-    It "ケース16" { # リポジトリ名/compare/{コミットハッシュ}...{コミットハッシュ}#diff-{MD5}
-        $SVNSourceLink = "source:`"../diff/trunk/src/net/Project/Client/Infrastructure/Services/MessageDialog/MessageDialog.cs?rev=172609&rev_to=171813`""
-        $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
-        $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/compare/f772dd003c3cbdf559919bc19eeee07997c88a8e...935adcc7ec6383136bf3a150ff1cd2188ef20e74#diff-628a73a4c57f3a0c8b105da5661aea84 "
-    }
+    # It "ケース15" { #../diff/ をRemoveすればいける?
+    #     $SVNSourceLink = "pjm:source:/trunk/src/net/Project/Server/Mail/Mail/Triggers/ProjectModel.cs "
+    #     $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
+    #     $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/blob/master/src/net/Project/Server/Mail/Mail/Triggers/ProjectModel.cs  "
+    # }
+    # It "ケース16" { # リポジトリ名/compare/{コミットハッシュ}...{コミットハッシュ}#diff-{MD5}
+    #     $SVNSourceLink = "source:`"../diff/trunk/src/net/Project/Client/Infrastructure/Services/MessageDialog/MessageDialog.cs?rev=172609&rev_to=171813`""
+    #     $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
+    #     $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/compare/f772dd003c3cbdf559919bc19eeee07997c88a8e...935adcc7ec6383136bf3a150ff1cd2188ef20e74#diff-628a73a4c57f3a0c8b105da5661aea84 "
+    # }
     It "ケース17" { #14のダブルコーテーション版
         $SVNSourceLink = "pjm:source:`"../diff/trunk/src/net/Unit Test/Server/Mail\Test.Mail/Triggers/TaskAlertBatchMailTriggerTest.cs@125670`""
         $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink

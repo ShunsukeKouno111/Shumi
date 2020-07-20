@@ -4,13 +4,11 @@ $outputCsv = @()
 function Update-SourceLink {
     Param(
         [string]
-        $SourceLink,
-        [int]
-        $TicketNum
+        $SourceLink
     )
 
     # テスト用
-    #$revision_hash = Get-RevisionMappingFile "D:\GitRepository\Shumi\replace\pjm-dev"
+    $revision_hash = Get-RevisionMappingFile "D:\GitRepository\Shumi\replace\pjm-dev"
 
     $svnSourceLink = $SourceLink
 
@@ -27,8 +25,8 @@ function Update-SourceLink {
     if ($svnSourceLink.Contains("pjm:")) {
         $svnSourceLink = $svnSourceLink -replace "pjm:source:/", "source:"
     }
-    if ($svnSourceLink.Contains("\")) {
-        $svnSourceLink = $svnSourceLink -replace "\", "/"
+    if ($svnSourceLink.Contains("\\")) {
+        $svnSourceLink = $svnSourceLink -replace "\\", "/"
     }
     if ($svnSourceLink.Contains("../revisions/")) {
         $array = $svnSourceLink -split "/"
@@ -95,7 +93,6 @@ function Update-SourceLink {
         $githubLink = $githubLink + " "
     }
     $mappingData = New-Object PSCustomObject -Property @{ ticket = ""; svn = ""; git = "" }
-    $mappingData.ticket = $TicketNum
     $mappingData.svn = $SourceLink
     $mappingData.git = $githubLink
     $outputCsv += $mappingData
@@ -153,13 +150,11 @@ function Get-RevisionMappingFile {
 function Update-DescriptionSourceLink {
     Param(
         [string]
-        $Description,
-        [int]
-        $ticketNum
+        $Description
     )
 
-    $updatedDescription = [regex]::Replace($Description, "(pjm:|)source:`".+?`"", { Update-SourceLink($args[0].Groups[0].Value, $ticketNum) })
-    $updatedDescription = [regex]::Replace($updatedDescription, "(pjm:|)source:.+?(\s|\r|\n|\r\n)", { Update-SourceLink($args[0].Groups[0].Value, $ticketNum) })
+    $updatedDescription = [regex]::Replace($Description, "(pjm:|)source:`".+?`"", { Update-SourceLink($args[0].Groups[0].Value) })
+    $updatedDescription = [regex]::Replace($updatedDescription, "(pjm:|)source:.+?(\s|\r|\n|\r\n)", { Update-SourceLink($args[0].Groups[0].Value) })
     return $updatedDescription
 }
 
@@ -269,7 +264,7 @@ function Update-RedmineSourceLink {
             $issue = New-Object PSCustomObject -Property @{id = ""; description = "" }
             $issue.id = $mySqlValues[0]
             $originalDescription = $mySqlValues[1]
-            $issue.description = Update-DescriptionSourceLink $originalDescription $issue.id
+            $issue.description = Update-DescriptionSourceLink -Description $originalDescription -ticketNum $issue.id
             if ($originalDescription -ne $issue.description) {
                 $changedIssues.Add($issue) | Out-Null
 
@@ -335,5 +330,5 @@ function Update-RedmineSourceLink {
     }
 }
 
-Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\pjm-dev" -SVNRootURL "http://ksvnrp05.isid.co.jp/pjm-dev"
-Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\iquavis-plugin" -SVNRootURL "http://ksvnrp16.isid.co.jp/iquavis-plugin"
+#Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\pjm-dev" -SVNRootURL "http://ksvnrp05.isid.co.jp/pjm-dev"
+#Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\iquavis-plugin" -SVNRootURL "http://ksvnrp16.isid.co.jp/iquavis-plugin"
