@@ -1,32 +1,37 @@
 ﻿$revision_hash = @{ }
+$outputCsv = @()
 
 function Update-SourceLink {
     Param(
         [string]
-        $SourceLink
+        $SourceLink,
+        [int]
+        $TicketNum
     )
 
     # テスト用
     #$revision_hash = Get-RevisionMappingFile "D:\GitRepository\Shumi\replace\pjm-dev"
 
+    $svnSourceLink = $SourceLink
+
     $getHashRepository = {
         return $revision_hash[$args[0]]
     }
 
-    if ($SourceLink.Contains("/doc/")) {
+    if ($svnSourceLink.Contains("/doc/")) {
         return $SourceLink
     }
-    if ($SourceLink.Contains("../diff/")) {
-        $SourceLink = $SourceLink -replace "../diff/", ""
+    if ($svnSourceLink.Contains("../diff/")) {
+        $svnSourceLink = $svnSourceLink -replace "../diff/", ""
     }
-    if ($SourceLink.Contains("pjm:")) {
-        $SourceLink = $SourceLink -replace "pjm:source:/", "source:"
+    if ($svnSourceLink.Contains("pjm:")) {
+        $svnSourceLink = $svnSourceLink -replace "pjm:source:/", "source:"
     }
-    if ($SourceLink.Contains("\")) {
-        $SourceLink = $SourceLink -replace "\\", "\\"
+    if ($svnSourceLink.Contains("\")) {
+        $svnSourceLink = $svnSourceLink -replace "\", "/"
     }
-    if ($SourceLink.Contains("../revisions/")) {
-        $array = $SourceLink -split "/"
+    if ($svnSourceLink.Contains("../revisions/")) {
+        $array = $svnSourceLink -split "/"
         $script:count = 0
         foreach ($value in $array) {
             if ($value -eq "revisions") {
@@ -35,44 +40,50 @@ function Update-SourceLink {
             }
             $script:count++
         }
-        $SourceLink = $SourceLink.TrimEnd() -replace "../revisions/\d{1,6}/diff/", ""
-        $SourceLink = "$SourceLink@$revision"
+        $svnSourceLink = $svnSourceLink.TrimEnd() -replace "../revisions/\d{1,6}/diff/", ""
+        $svnSourceLink = "$svnSourceLink@$revision"
     }
 
     #ケース2,3,5,6,8,9,11,12
-    if ($SourceLink.Contains("@")) {
-        $array = $SourceLink -split "(trunk|branches/.*?)/" -split "@" -split "#"
+    if ($svnSourceLink.Contains("@")) {
+        $array = $svnSourceLink -split "(trunk|branches/.*?)/" -split "@" -split "#"
         $directoryPath = $array[2]
         $revision = $array[3] -replace "`"", ""
+        if (-not $revision) {
+            return $SourceLink
+        }
         $line = $array[4] -replace "`"", ""
         $md5 = Get-MD5Hash $directoryPath
         $hash_repository = & $getHashRepository $revision.Trim()
         $githubLink = "$($hash_repository.Values)/commit/$($hash_repository.keys)#diff-$md5$line"
 
     }
-    elseif ($SourceLink.Contains("?rev=")) {
-        $array = $SourceLink -split "(trunk|branches/.*?)/" -split ".rev=" -split ".rev_to="
+    elseif ($svnSourceLink.Contains("?rev=")) {
+        $array = $svnSourceLink -split "(trunk|branches/.*?)/" -split ".rev=" -split ".rev_to="
         $directoryPath = $array[2]
         $revision = $array[3] -replace "`"", ""
         $toRevision = $array[4] -replace "`"", ""
+        if (-not $revision) {
+            return $SourceLink
+        }
         $md5 = Get-MD5Hash $directoryPath
         $hash_repository = & $getHashRepository $revision.Trim()
         $toHash_repository = & $getHashRepository $toRevision.Trim()
-        $githubLink = $SourceLink -replace "source:(`"|)(trunk|branches/.*?|plugin/.*?/(trunk|branches/.*?))/[^@]*?", "$($hash_repository.Values)/"
+        $githubLink = $svnSourceLink -replace "source:(`"|)(trunk|branches/.*?|plugin/.*?/(trunk|branches/.*?))/[^@]*?", "$($hash_repository.Values)/"
         $githubLink = $githubLink -replace $directoryPath, ""
         $githubLink = $githubLink -replace ".rev=\d{1,6}.rev_to=\d{1,6}", "compare/$($hash_repository.keys)...$($toHash_repository.keys)#diff-$md5"
     }
     #ケース1
-    elseif ($SourceLink -match "source:(`"|)trunk/") {
-        $githubLink = $SourceLink -replace "source:(`"|)trunk/", "https://github.com/ISID/iQUAVIS/blob/master/"
+    elseif ($svnSourceLink -match "source:(`"|)trunk/") {
+        $githubLink = $svnSourceLink -replace "source:(`"|)trunk/", "https://github.com/ISID/iQUAVIS/blob/master/"
     }
     #ケース4
-    elseif ($SourceLink -match "source:(`"|)branches/") {
-        $githubLink = $SourceLink -replace "source:(`"|)branches/", "https://github.com/ISID/iQUAVIS/blob/"
+    elseif ($svnSourceLink -match "source:(`"|)branches/") {
+        $githubLink = $svnSourceLink -replace "source:(`"|)branches/", "https://github.com/ISID/iQUAVIS/blob/"
     }
     #ケース7,10
-    elseif ($SourceLink -match "source:(`"|)plugin/([^/]*?)") {
-        $githubLink = $SourceLink -replace "source:(`"|)plugin/([^/]*?)", "https://github.com/ISID/iQUAVIS-" #ケース7
+    elseif ($svnSourceLink -match "source:(`"|)plugin/([^/]*?)") {
+        $githubLink = $svnSourceLink -replace "source:(`"|)plugin/([^/]*?)", "https://github.com/ISID/iQUAVIS-" #ケース7
         $githubLink = $githubLink -replace "trunk", "blob/master" #ケース7
         $githubLink = $githubLink -replace "branches", "blob" #ケース10
     }
@@ -83,6 +94,12 @@ function Update-SourceLink {
         $githubLink = $githubLink -replace "`"", ""
         $githubLink = $githubLink + " "
     }
+    $mappingData = New-Object PSCustomObject -Property @{ ticket = ""; svn = ""; git = "" }
+    $mappingData.ticket = $TicketNum
+    $mappingData.svn = $SourceLink
+    $mappingData.git = $githubLink
+    $outputCsv += $mappingData
+
     return $githubLink
 }
 
@@ -136,11 +153,13 @@ function Get-RevisionMappingFile {
 function Update-DescriptionSourceLink {
     Param(
         [string]
-        $Description
+        $Description,
+        [int]
+        $ticketNum
     )
 
-    $updatedDescription = [regex]::Replace($Description, "(pjm:|)source:`".+?`"", { Update-SourceLink($args[0].Groups[0].Value) })
-    $updatedDescription = [regex]::Replace($updatedDescription, "(pjm:|)source:.+?\s", { Update-SourceLink($args[0].Groups[0].Value) })
+    $updatedDescription = [regex]::Replace($Description, "(pjm:|)source:`".+?`"", { Update-SourceLink($args[0].Groups[0].Value, $ticketNum) })
+    $updatedDescription = [regex]::Replace($updatedDescription, "(pjm:|)source:.+?(\s|\r|\n|\r\n)", { Update-SourceLink($args[0].Groups[0].Value, $ticketNum) })
     return $updatedDescription
 }
 
@@ -157,6 +176,7 @@ function Update-RedmineSourceLink {
 
     $errorLogPath = Join-Path $PSScriptRoot "error.log"
     $timeLog = Join-Path $PSScriptRoot "timestamp.log"
+    $exportFile = Join-Path $PSScriptRoot "rewritelog.csv"
     $script:count = 0
 
     "importing mapping file."
@@ -249,9 +269,10 @@ function Update-RedmineSourceLink {
             $issue = New-Object PSCustomObject -Property @{id = ""; description = "" }
             $issue.id = $mySqlValues[0]
             $originalDescription = $mySqlValues[1]
-            $issue.description = Update-DescriptionSourceLink $originalDescription
+            $issue.description = Update-DescriptionSourceLink $originalDescription $issue.id
             if ($originalDescription -ne $issue.description) {
                 $changedIssues.Add($issue) | Out-Null
+
             }
             $script:count++
             if ($script:count % 10000 -eq 0) {
@@ -302,6 +323,7 @@ function Update-RedmineSourceLink {
                 break
             }
         }
+        $outputCsv | Export-Csv $exportFile -Encoding UTF8 -NoTypeInformation
     }
     finally {
         if ($mySqlCommandResult) {
