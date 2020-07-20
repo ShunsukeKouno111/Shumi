@@ -8,7 +8,7 @@ function Update-SourceLink {
     )
 
     # テスト用
-    $revision_hash = Get-RevisionMappingFile "D:\GitRepository\Shumi\replace\pjm-dev"
+    #$revision_hash = Get-RevisionMappingFile "D:\GitRepository\Shumi\replace\pjm-dev"
 
     $svnSourceLink = $SourceLink
 
