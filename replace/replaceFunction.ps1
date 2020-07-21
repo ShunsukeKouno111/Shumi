@@ -10,7 +10,7 @@ function Update-SourceLink {
     $mappingData = New-Object PSCustomObject -Property @{ svn = ""; git = "" }
     $mappingData.svn = $SourceLink
     # テスト用
-    #$revision_hash = Get-RevisionMappingFile "D:\GitRepository\Shumi\replace\pjm-dev"
+    $revision_hash = Get-RevisionMappingFile "D:\GitRepository\Shumi\replace\pjm-dev"
 
     $svnSourceLink = $SourceLink
 
@@ -52,25 +52,25 @@ function Update-SourceLink {
 
     #ケース2,3,5,6,8,9,11,12
     if ($svnSourceLink.Contains("@")) {
-        $array = $svnSourceLink -split "(trunk|branches/.*?)/" -split "@" -split "#"
-        $directoryPath = $array[2]
-        $revision = $array[3] -replace "`"", ""
+        $array = $svnSourceLink -split "(/|\\|)(trunk|branches/.*?)/" -split "@" -split "#"
+        $directoryPath = $array[3]
+        $revision = $array[4] -replace "`"", ""
         if (-not $revision) {
             $mappingData.git = $githubLink
             $outputCsv += $mappingData
             return $SourceLink
         }
-        $line = $array[4] -replace "`"", ""
+        $line = $array[5] -replace "`"", ""
         $md5 = Get-MD5Hash $directoryPath
         $hash_repository = & $getHashRepository $revision.Trim()
         $githubLink = "$($hash_repository.Values)/commit/$($hash_repository.keys)#diff-$md5$line"
 
     }
     elseif ($svnSourceLink.Contains("?rev=")) {
-        $array = $svnSourceLink -split "(trunk|branches/.*?)/" -split "(\\|).rev=" -split ".rev_to="
-        $directoryPath = $array[2]
-        $revision = $array[4] -replace "`"", ""
-        $toRevision = $array[5] -replace "`"", ""
+        $array = $svnSourceLink -split "(/|\\|)(trunk|branches/.*?)/" -split "(\\|).rev=" -split ".rev_to="
+        $directoryPath = $array[3]
+        $revision = $array[5] -replace "`"", ""
+        $toRevision = $array[6] -replace "`"", ""
         if (-not $revision) {
             $mappingData.git = $githubLink
             $outputCsv += $mappingData
@@ -82,16 +82,16 @@ function Update-SourceLink {
         $githubLink = "$($hash_repository.Values)/compare/$($hash_repository.keys)...$($toHash_repository.keys)#diff-$md5"
     }
     #ケース1
-    elseif ($svnSourceLink -match "source:(`"|)trunk(/|\\)") {
-        $githubLink = $svnSourceLink -replace "source:(`"|)trunk(/|\\)", "https://github.com/ISID/iQUAVIS/blob/master/"
+    elseif ($svnSourceLink -match "source:(/|\\|)(`"|)trunk(/|\\)") {
+        $githubLink = $svnSourceLink -replace "source:(/|\\|)(`"|)trunk(/|\\)", "https://github.com/ISID/iQUAVIS/blob/master/"
     }
     #ケース4
-    elseif ($svnSourceLink -match "source:(`"|)branches(/|\\)") {
-        $githubLink = $svnSourceLink -replace "source:(`"|)branches(/|\\)", "https://github.com/ISID/iQUAVIS/blob/"
+    elseif ($svnSourceLink -match "source:(/|\\|)(`"|)branches(/|\\)") {
+        $githubLink = $svnSourceLink -replace "source:(/|\\|)(`"|)branches(/|\\)", "https://github.com/ISID/iQUAVIS/blob/"
     }
     #ケース7,10
-    elseif ($svnSourceLink -match "source:(`"|)plugin/([^/]*?)") {
-        $githubLink = $svnSourceLink -replace "source:(`"|)plugin/([^/]*?)", "https://github.com/ISID/iQUAVIS-" #ケース7
+    elseif ($svnSourceLink -match "source:(/|\\|)(`"|)plugin/([^/]*?)") {
+        $githubLink = $svnSourceLink -replace "source:(/|\\|)(`"|)plugin/([^/]*?)", "https://github.com/ISID/iQUAVIS-" #ケース7
         $githubLink = $githubLink -replace "trunk", "blob/master" #ケース7
         $githubLink = $githubLink -replace "branches", "blob" #ケース10
     }
@@ -313,7 +313,7 @@ function Update-RedmineSourceLink {
             $command.ExecuteNonQuery() | Out-Null
             "#$($issue.id) is updated."
             $script:count++
-            if ($script:count % 10000 -eq 0) {
+            if ($script:count % 1000 -eq 0) {
                 "$script:count issues is updated."
                 $date = Get-Date
                 "$script:count issues is updated. time:$date" | Out-File $timeLog -Append -encoding UTF8
@@ -340,5 +340,5 @@ function Update-RedmineSourceLink {
     }
 }
 
-Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\pjm-dev" -SVNRootURL "http://ksvnrp05.isid.co.jp/pjm-dev"
-Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\iquavis-plugin" -SVNRootURL "http://ksvnrp16.isid.co.jp/iquavis-plugin"
+#Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\pjm-dev" -SVNRootURL "http://ksvnrp05.isid.co.jp/pjm-dev"
+#Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\iquavis-plugin" -SVNRootURL "http://ksvnrp16.isid.co.jp/iquavis-plugin"

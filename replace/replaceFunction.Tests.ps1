@@ -109,4 +109,14 @@ Describe "Update-DescriptionSourceLink" {
         $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
         $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/commit/2a610b370965fb100c035a0c34ea7337e226a40b#diff-5e0a2e0b1934c0d2fc8e334f24f1a4d2 "
     }
+    It "ケース19" {
+        $SVNSourceLink = "source:`"/trunk/src/net/Script/Net-Build.ps1@149657`""
+        $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
+        $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/commit/56d5a47b2a461a34676326f13966652901ad94b5#diff-43758f965282ae160c9890a763c621e2 "
+    }
+    It "ケース20" {
+        $SVNSourceLink = "source:/trunk/src/net/Script/Net-Build.ps1@149657 "
+        $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
+        $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/commit/56d5a47b2a461a34676326f13966652901ad94b5#diff-43758f965282ae160c9890a763c621e2 "
+    }
 }
