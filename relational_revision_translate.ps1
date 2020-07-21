@@ -1,10 +1,10 @@
-function Update-RerationalRevision{
+function Update-RerationalRevision {
     Param(
-            [String]
-            $CsvRootURL,
-            [String]
-            $SVNRootURL
-        )
+        [String]
+        $CsvRootURL,
+        [String]
+        $SVNRootURL
+    )
 
     & (Join-Path $PSScriptRoot 'ModuleLoader.ps1')
     Set-DBInstance "localhost\SQLEXPRESS"
@@ -15,7 +15,7 @@ function Update-RerationalRevision{
     $script:count = 0
 
     "importing mapping file."
-    $csvfiles = Get-ChildItem $CsvRootURL -Recurse | Where-Object { $_.Extension -eq ".csv"}
+    $csvfiles = Get-ChildItem $CsvRootURL -Recurse | Where-Object { $_.Extension -eq ".csv" }
     foreach ($csvfile in $csvfiles) {
         $csv = Import-Csv $csvfile.FullName
         $parentDirName = Split-Path (Split-Path $csvfile.FullName -Parent) -Leaf
@@ -26,17 +26,17 @@ function Update-RerationalRevision{
             $revision = $csvline.revision
             $branch = $csvline.branch
             $hash_repository = @{ }
-            $hash_repository.Add($csvline.hash,$repositoryPath) > $null
-            if($revision_hash.ContainsKey($revision)){
-            if($branch -eq "refs/svn/root/trunk"){
-                $revision_hash.Remove($revision) > $null
+            $hash_repository.Add($csvline.hash, $repositoryPath) > $null
+            if ($revision_hash.ContainsKey($revision)) {
+                if ($branch -eq "refs/svn/root/trunk") {
+                    $revision_hash.Remove($revision) > $null
+                    $revision_hash.Add($revision, $hash_repository) > $null
+                }
+            }
+            elseif ($branch -ne '') {
                 $revision_hash.Add($revision, $hash_repository) > $null
             }
-            }
-            elseif($branch -ne ''){
-                $revision_hash.Add($revision, $hash_repository) > $null
-            }
-            if($script:count % 10000 -eq 0){
+            if ($script:count % 10000 -eq 0) {
                 "$script:count revision imported."
                 $date = Get-Date
                 "$script:count revision imported. time:$date" | Out-File $timeLog -Append -encoding UTF8
@@ -95,22 +95,22 @@ function Update-RerationalRevision{
     $tableInfo | ForEach-Object {
         $sql = $_.Sql
         if (-not ($sql.Contains("ORDER BY"))) {
-            $sql = $sql -replace '^SELECT\s+(\[\w+\]).+$','$0 ORDER BY issue_id;'
+            $sql = $sql -replace '^SELECT\s+(\[\w+\]).+$', '$0 ORDER BY issue_id;'
         }
         $schemaName = "[$($_.SchemaName)]"
-        try{
+        try {
             $mySqlCommandResult = & $getMySqlDbCommand
             $command = $mySqlCommandResult.Command
             $command.CommandText = & $toMySqlQuery $sql $schemaName
             $script:count = 0
             Invoke-SqlDataReader -DatabaseName $DB_NAME -Sql $sql -Action {
                 $mySqlValues = & $getReaderValues $args[0]
-                $changesets_issues = New-Object PSCustomObject -Property @{changeset_id="";issue_id=""}
+                $changesets_issues = New-Object PSCustomObject -Property @{changeset_id = ""; issue_id = "" }
                 $changesets_issues.changeset_id = $mySqlValues[0]
                 $changesets_issues.issue_id = $mySqlValues[1]
                 $changesetsIssues.Add($changesets_issues) > $null
                 $script:count++
-                if($script:count % 10000 -eq 0){
+                if ($script:count % 10000 -eq 0) {
                     "$script:count changesets_issues added."
                     $date = Get-Date
                     "$script:count changesets_issues added. time:$date" | Out-File $timeLog -Append -encoding UTF8
@@ -125,10 +125,10 @@ function Update-RerationalRevision{
                 }
             }
         }
-        try{
+        try {
             $changesets = New-Object System.Collections.ArrayList
             $count = 0
-            for($count ;$count -lt $changesetsIssues.Count;){
+            for ($count; $count -lt $changesetsIssues.Count; ) {
                 $nowIssueId = $changesetsIssues[$count].issue_id
                 "Adding #$nowIssueId's changesets."
                 $sql = "select changesets.id,changesets.revision,changesets.comments,REPO.url,REPO.root_url,REPO.project_id
@@ -136,32 +136,33 @@ function Update-RerationalRevision{
                 inner join repositories REPO
                 on changesets.repository_id = REPO.id
                 where root_url ='$SVNRootURL' and"
-                for($count ;$count -le $changesetsIssues.Count;){
+                for ($count ; $count -le $changesetsIssues.Count; ) {
                     $nowChangesetsIssue = $changesetsIssues[$count]
-                    if($nowIssueId -eq $nowChangesetsIssue.issue_id -and $count -ne $changesetsIssues.Count){
+                    if ($nowIssueId -eq $nowChangesetsIssue.issue_id -and $count -ne $changesetsIssues.Count) {
                         $changeset_id = $nowChangesetsIssue.changeset_id
-                        $sql+=" changesets.id = $changeset_id or"
+                        $sql += " changesets.id = $changeset_id or"
                         $count++
                     }
-                    else{
-                        $sql = $sql.Substring(0,$sql.Length-3)+";"
+                    else {
+                        $sql = $sql.Substring(0, $sql.Length - 3) + ";"
                         $mySqlCommandResult = & $getMySqlDbCommand
                         $command = $mySqlCommandResult.Command
                         $command.CommandText = & $toMySqlQuery $sql $schemaName
                         Invoke-SqlDataReader -DatabaseName $DB_NAME -Sql $sql -Action {
                             $mySqlValues = & $getReaderValues $args[0]
                             $changeset = New-Object PSCustomObject -Property @{
-                                id=$mySqlValues[0];
-                                issue_id=$nowIssueId;
-                                revision=$mySqlValues[1];
-                                comments=$mySqlValues[2]}
-                            if($changeset.comments.Contains("https://github.com") -eq $false){
+                                id       = $mySqlValues[0];
+                                issue_id = $nowIssueId;
+                                revision = $mySqlValues[1];
+                                comments = $mySqlValues[2]
+                            }
+                            if ($changeset.comments.Contains("https://github.com") -eq $false) {
                                 $changesets.Add($changeset) > $null
                             }
                         }
                         break
                     }
-                    if($count % 10000 -eq 0){
+                    if ($count % 10000 -eq 0) {
                         "$script:count changesets added."
                         $date = Get-Date
                         "$script:count changesets added. time:$date" | Out-File $timeLog -Append -encoding UTF8
@@ -179,25 +180,25 @@ function Update-RerationalRevision{
         }
         $ticketNumber = 0
         $script:count = 0
-        try{
-            foreach($changeset in $changesets){
-                if($ticketNumber -ne $changeset.issue_id){
+        try {
+            foreach ($changeset in $changesets) {
+                if ($ticketNumber -ne $changeset.issue_id) {
                     "#$ticketNumber is updated."
                     $ticketNumber = $changeset.issue_id
                     "#$ticketNumber is updating."
                     $script:count++
                 }
-                if($script:count % 10000 -eq 0){
+                if ($script:count % 10000 -eq 0) {
                     $date = Get-Date
                     "$script:count issues updated. time:$date" | Out-File $timeLog -Append -encoding UTF8
                 }
                 $hash_repository = Get-CommitHash $changeset.revision
                 $hash = $hash_repository.Keys
                 $repository = "https://github.com/ISID/$($hash_repository.Values)"
-                if($null -eq $hash){
+                if ($null -eq $hash) {
                     "ticket number:$($changeset.issue_id) revision:$($changeset.revision) isn't found." | Out-File $errorLogPath -Append -encoding UTF8
                 }
-                else{
+                else {
                     $comments = [MySql.Data.MySqlClient.MySqlHelper]::EscapeString($changeset.comments)
                     $mySqlCommandResult = & $getMySqlDbCommand
                     $command = $mySqlCommandResult.Command

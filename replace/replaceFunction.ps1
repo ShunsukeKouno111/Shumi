@@ -7,8 +7,7 @@ function Update-SourceLink {
         $SourceLink
     )
 
-    $mappingData = New-Object PSCustomObject -Property @{ svn = ""; git = "" }
-    $mappingData.svn = $SourceLink
+    $mappingData = New-Object PSCustomObject -Property @{ svn = $SourceLink; git = "" }
     # テスト用
     $revision_hash = Get-RevisionMappingFile "D:\GitRepository\Shumi\replace\pjm-dev"
 
@@ -30,10 +29,10 @@ function Update-SourceLink {
         $svnSourceLink = $svnSourceLink -replace "../diff/", ""
     }
     if ($svnSourceLink.Contains("pjm:")) {
-        $svnSourceLink = $svnSourceLink -replace "pjm:source:/", "source:"
+        $svnSourceLink = $svnSourceLink -replace "pjm:source:", "source:"
     }
     if ($svnSourceLink.Contains("iq-core:")) {
-        $svnSourceLink = $svnSourceLink -replace "iq-core:source:/", "source:"
+        $svnSourceLink = $svnSourceLink -replace "iq-core:source:", "source:"
     }
 
     if ($svnSourceLink.Contains("../revisions/")) {
@@ -275,8 +274,7 @@ function Update-RedmineSourceLink {
             $issue = New-Object PSCustomObject -Property @{id = ""; description = "" }
             $issue.id = $mySqlValues[0]
             $originalDescription = $mySqlValues[1]
-            #ログで使用
-            $issue.description = Update-DescriptionSourceLink -Description $originalDescription -ticketNum $issue.id
+            $issue.description = Update-DescriptionSourceLink -Description $originalDescription
             if ($originalDescription -ne $issue.description) {
                 $changedIssues.Add($issue) | Out-Null
             }
@@ -287,7 +285,7 @@ function Update-RedmineSourceLink {
                 "$script:count issues is checked. time:$date" | Out-File $timeLog -Append -encoding UTF8
             }
             trap {
-                Out-File -InputObject $issue.id -FilePath $errorLogPath -Encoding (COnvertTo-EncodingParameter (New-Object Text.UTF8Encoding $true)) -NoNewLine
+                Out-File -InputObject $issue.id -FilePath $errorLogPath -Append -encoding UTF8
                 break
             }
         }
