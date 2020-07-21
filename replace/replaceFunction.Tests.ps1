@@ -1,12 +1,11 @@
 ﻿$here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path) -replace '\.Tests\.', '.'
 . "$here\$sut"
-$ticket = 0;
 
 Describe "Update-DescriptionSourceLink" {
     It "ケース1" {
         $SVNSourceLink = "ccc source:`"trunk/src/net/Script/Net-Build.ps1`" fff"
-        $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink $ticket
+        $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
         $GitHubSourceLink | Should Be "ccc https://github.com/ISID/iQUAVIS/blob/master/src/net/Script/Net-Build.ps1  fff"
     }
     It "ケース1 -ダブルコーテーションなし-" {
@@ -118,5 +117,10 @@ Describe "Update-DescriptionSourceLink" {
         $SVNSourceLink = "source:/trunk/src/net/Script/Net-Build.ps1@149657 "
         $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
         $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/commit/56d5a47b2a461a34676326f13966652901ad94b5#diff-43758f965282ae160c9890a763c621e2 "
+    }
+    It "ケース21" {
+        $SVNSourceLink = "source:/trunk/src/Project/Client/Client.TMC.iSpirit/PluginModule.cs "
+        $GitHubSourceLink = Update-DescriptionSourceLink -Description $SVNSourceLink -PluginName "/TMC/TMC_iSpirit"
+        $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS-TMC-iSpirit/blob/master/src/Project/Client/Client.TMC_iSpirit/PluginModule.cs  "
     }
 }
