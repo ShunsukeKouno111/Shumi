@@ -88,7 +88,7 @@ Describe "Update-DescriptionSourceLink" {
         $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
         $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/commit/2a610b370965fb100c035a0c34ea7337e226a40b#diff-e029a624dce3132299a83c8926efea0f "
     }
-    It "ケース15" { #../diff/ をRemoveすればいける?
+    It "ケース15" { # pjm:を飛ばしている
         $SVNSourceLink = "pjm:source:/trunk/src/net/Project/Server/Mail/Mail/Triggers/ProjectModel.cs "
         $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
         $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/blob/master/src/net/Project/Server/Mail/Mail/Triggers/ProjectModel.cs  "
@@ -165,6 +165,11 @@ Describe "Update-DescriptionSourceLink" {
     }
     It "ケース27 -ダブルコーテーションなし-" {
         $SVNSourceLink = "aaa source:trunk/src/net/Script/Net-Build.ps1L12 ccc"
+        $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
+        $GitHubSourceLink | Should Be "aaa https://github.com/ISID/iQUAVIS/blob/master/src/net/Script/Net-Build.ps1L12  ccc"
+    }
+    It "ケース28" {
+        $SVNSourceLink = "source:trunk\src\net\Project\Client\Istyle\Resources\Core\Core.xaml "
         $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
         $GitHubSourceLink | Should Be "aaa https://github.com/ISID/iQUAVIS/blob/master/src/net/Script/Net-Build.ps1L12  ccc"
     }
