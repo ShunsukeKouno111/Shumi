@@ -23,7 +23,7 @@ function Update-SourceLink {
     }
 
     # テスト用
-    $revision_hash = Get-RevisionMappingFile "D:\GitRepository\Shumi\replace\pjm-dev"
+    #$revision_hash = Get-RevisionMappingFile "D:\GitRepository\Shumi\replace\pjm-dev"
     $mappingData = New-Object PSCustomObject -Property @{ id = $TicketId; svn = $SourceLink; git = "" }
     $svnSourceLink = $SourceLink
 
@@ -127,11 +127,11 @@ function Update-SourceLink {
         $githubLink = $githubLink -replace "trunk", "blob/master" #ケース7
         $githubLink = $githubLink -replace "branches", "blob" #ケース10
     }
-    elseif ($svnSourceLink.Contains("#L")) {
-        $githubLink = $svnSourceLink -replace "#", ""
-    }
     else {
         $githubLink = $SourceLink
+    }
+    if ($svnSourceLink.Contains("#L")) {
+        $githubLink = $svnSourceLink -replace "#", ""
     }
     if ($githubLink -ne $SourceLink) {
         $githubLink = $githubLink -replace "`"", ""
@@ -293,7 +293,7 @@ function Update-RedmineSourceLink {
         from ISSUES
         inner join repositories REPO
         on ISSUES.project_id = REPO.project_id
-        Where-Object root_url ='$SVNRootURL'
+        where REPO.root_url ='$SVNRootURL'
         order by ISSUES.Id; "
     $schemaName = "[dbo]"
     try {
@@ -378,5 +378,5 @@ function Update-RedmineSourceLink {
     }
 }
 
-# Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\pjm-dev" -SVNRootURL "http://ksvnrp05.isid.co.jp/pjm-dev"
-# Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\iquavis-plugin" -SVNRootURL "http://ksvnrp16.isid.co.jp/iquavis-plugin"
+Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\pjm-dev" -SVNRootURL "http://ksvnrp05.isid.co.jp/pjm-dev"
+Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\iquavis-plugin" -SVNRootURL "http://ksvnrp16.isid.co.jp/iquavis-plugin"
