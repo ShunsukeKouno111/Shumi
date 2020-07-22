@@ -148,4 +148,24 @@ Describe "Update-DescriptionSourceLink" {
         $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
         $GitHubSourceLink | Should Be "bbb https://github.com/ISID/iQUAVIS/commit/56d5a47b2a461a34676326f13966652901ad94b5#diff-43758f965282ae160c9890a763c621e2L132 aaa"
     }
+    It "ケース26" {
+        $SVNSourceLink = "source:`"trunk/src/net/Script/Net-Build.ps1@149657L132`""
+        $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
+        $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/commit/56d5a47b2a461a34676326f13966652901ad94b5#diff-43758f965282ae160c9890a763c621e2L132 "
+    }
+    It "ケース26 -ダブルコーテーションなし-" {
+        $SVNSourceLink = "bbb source:trunk/src/net/Script/Net-Build.ps1@149657L132 aaa"
+        $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
+        $GitHubSourceLink | Should Be "bbb https://github.com/ISID/iQUAVIS/commit/56d5a47b2a461a34676326f13966652901ad94b5#diff-43758f965282ae160c9890a763c621e2L132 aaa"
+    }
+    It "ケース27" {
+        $SVNSourceLink = "ccc source:`"trunk/src/net/Script/Net-Build.ps1#L12`" fff"
+        $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
+        $GitHubSourceLink | Should Be "ccc https://github.com/ISID/iQUAVIS/blob/master/src/net/Script/Net-Build.ps1L12  fff"
+    }
+    It "ケース27 -ダブルコーテーションなし-" {
+        $SVNSourceLink = "aaa source:trunk/src/net/Script/Net-Build.ps1L12 ccc"
+        $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
+        $GitHubSourceLink | Should Be "aaa https://github.com/ISID/iQUAVIS/blob/master/src/net/Script/Net-Build.ps1L12  ccc"
+    }
 }

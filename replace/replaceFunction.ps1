@@ -79,7 +79,7 @@ function Update-SourceLink {
             $outputCsv += $mappingData
             return $SourceLink
         }
-        if ($svnSourceLink -match "#L\d{1,4}") {
+        if ($svnSourceLink -match "(#|)L\d{1,4}") {
             $line = $Matches[0] -replace "#", ""
         }
         $md5 = Get-MD5Hash $directoryPath
@@ -132,11 +132,11 @@ function Update-SourceLink {
         $githubLink = $githubLink -replace "trunk", "blob/master" #ケース7
         $githubLink = $githubLink -replace "branches", "blob" #ケース10
     }
-    # elseif ($svnSourceLink.Contains("#L")) {
-    #     $githubLink = $svnSourceLink -replace "#", ""
-    # }
     else {
         $githubLink = $SourceLink
+    }
+    if ($githubLink.Contains("#L")) {
+        $githubLink = $githubLink -replace "#", ""
     }
     if ($githubLink -ne $SourceLink) {
         $githubLink = $githubLink -replace "`"", ""
