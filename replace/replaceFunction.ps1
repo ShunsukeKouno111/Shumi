@@ -33,12 +33,14 @@ function Update-SourceLink {
         return $revision_hash[$args[0]]
     }
 
-    if ($svnSourceLink.Contains("(/|\\|`"|)(doc|dev|support)(/|\\)")) {
+    if ($svnSourceLink -contains "(/|\\|`"|)(doc|dev|support)(/|\\)") {
         return $SourceLink
     }
-    if ($svnSourceLink -contains "source:src") {
-        $svnSourceLink = $svnSourceLink -replace "source:src", "source:trunk/src"
-    }
+    # if ($svnSourceLink -notmatch "source:(/|\\|`"/|`"\\|`"|)(trunk|branches(/|\\).*?|plugin.*?)(/|\\)src") {
+    #     $svnSourceLink = $svnSourceLink -replace "source:", "source:trunk/src/"
+    # }
+    $svnSourceLink = $svnSourceLink -replace "source:(/|\\|`"/|`"\\|)src", "source:trunk/src"
+    $svnSourceLink = $svnSourceLink -replace "//trunk", "trunk"
     if ($svnSourceLink.Contains("../diff/")) {
         $svnSourceLink = $svnSourceLink -replace "../diff/", ""
     }
@@ -54,6 +56,10 @@ function Update-SourceLink {
     if ($svnSourceLink.Contains("TeamSVN")) {
         $svnSourceLink = $svnSourceLink -replace "TeamSVN", ""
     }
+    if ($svnSourceLink.Contains("pjm-dev")) {
+        $svnSourceLink = $svnSourceLink -replace "pjm-dev", ""
+    }
+
 
 
     if ($svnSourceLink.Contains("../revisions/")) {

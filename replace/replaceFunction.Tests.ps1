@@ -3,13 +3,13 @@ $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path) -replace '\.Tests\.', '.'
 . "$here\$sut"
 
 Describe "Update-DescriptionSourceLink" {
-    # It "ケース1" {
-    #     $SVNSourceLink = "ccc source:`"trunk/src/net/Script/Net-Build.ps1`" fff"
-    #     $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
-    #     $GitHubSourceLink | Should Be "ccc https://github.com/ISID/iQUAVIS/blob/master/src/net/Script/Net-Build.ps1  fff"
-    # }
+    It "ケース1" {
+        $SVNSourceLink = "ccc source:`"trunk/src/net/Script/Net-Build.ps1`" fff"
+        $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
+        $GitHubSourceLink | Should Be "ccc https://github.com/ISID/iQUAVIS/blob/master/src/net/Script/Net-Build.ps1  fff"
+    }
     It "ケース1 -ダブルコーテーションなし-" {
-        $SVNSourceLink = "aaa source:src/net/Script/Net-Build.ps1 ccc"
+        $SVNSourceLink = "aaa source:trunk/src/net/Script/Net-Build.ps1 ccc"
         $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
         $GitHubSourceLink | Should Be "aaa https://github.com/ISID/iQUAVIS/blob/master/src/net/Script/Net-Build.ps1  ccc"
     }
