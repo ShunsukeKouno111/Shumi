@@ -23,7 +23,7 @@ function Update-SourceLink {
     }
 
     # テスト用
-    $revision_hash = Get-RevisionMappingFile "D:\GitRepository\Shumi\replace\pjm-dev"
+    #$revision_hash = Get-RevisionMappingFile "D:\GitRepository\Shumi\replace\pjm-dev"
     $mappingData = New-Object PSCustomObject -Property @{ id = $TicketId; svn = $SourceLink; git = "" }
     $svnSourceLink = $SourceLink
 
@@ -383,5 +383,5 @@ function Update-RedmineSourceLink {
     }
 }
 
-# Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\pjm-dev" -SVNRootURL "http://ksvnrp05.isid.co.jp/pjm-dev"
-# Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\iquavis-plugin" -SVNRootURL "http://ksvnrp16.isid.co.jp/iquavis-plugin"
+Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\pjm-dev" -SVNRootURL "http://ksvnrp05.isid.co.jp/pjm-dev"
+Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\iquavis-plugin" -SVNRootURL "http://ksvnrp16.isid.co.jp/iquavis-plugin"
