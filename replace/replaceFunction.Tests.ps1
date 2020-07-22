@@ -31,7 +31,7 @@ Describe "Update-DescriptionSourceLink" {
     It "ケース3 -ダブルコーテーションなし-" {
         $SVNSourceLink = "bbb source:trunk/src/net/Script/Net-Build.ps1@149657#L132 aaa"
         $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
-        $GitHubSourceLink | Should Be "bbb https://github.com/ISID/iQUAVIS/commit/56d5a47b2a461a34676326f13966652901ad94b5#diff-43758f965282ae160c9890a763c621e2L132  aaa"
+        $GitHubSourceLink | Should Be "bbb https://github.com/ISID/iQUAVIS/commit/56d5a47b2a461a34676326f13966652901ad94b5#diff-43758f965282ae160c9890a763c621e2L132 aaa"
     }
     It "ケース4" {
         $SVNSourceLink = "source:`"branches/3.4.3/src/net/Common Source/Shared/AssemblyInfoData.cs`""
@@ -137,5 +137,15 @@ Describe "Update-DescriptionSourceLink" {
         $SVNSourceLink = "iq-core:source:`"../diff/trunk/src/net/Project/Client/Module/Rem.Spread/Views/BlockDiagramDSM/BlockDiagramDSMViewModel.OpenCommand.cs?rev=150141&rev_to150028`""
         $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
         $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/compare/643b7b1bb1264526c61407a608d41140df424325...711bb77e52cb36e1287185b39a65ed9811d16168#diff-6a2e3ef0b28d30bbe2387a4b5702622c "
+    }
+    It "ケース25" {
+        $SVNSourceLink = "source:`"trunk/src/net/Script/Net-Build.ps1#L132@149657`""
+        $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
+        $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/commit/56d5a47b2a461a34676326f13966652901ad94b5#diff-43758f965282ae160c9890a763c621e2L132 "
+    }
+    It "ケース25 -ダブルコーテーションなし-" {
+        $SVNSourceLink = "bbb source:trunk/src/net/Script/Net-Build.ps1#L132@149657 aaa"
+        $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
+        $GitHubSourceLink | Should Be "bbb https://github.com/ISID/iQUAVIS/commit/56d5a47b2a461a34676326f13966652901ad94b5#diff-43758f965282ae160c9890a763c621e2L132 aaa"
     }
 }
