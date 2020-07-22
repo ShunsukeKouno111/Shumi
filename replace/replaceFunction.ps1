@@ -31,7 +31,7 @@ function Update-SourceLink {
         return $revision_hash[$args[0]]
     }
 
-    if ($svnSourceLink.Contains("/doc/")) {
+    if ($svnSourceLink.Contains("(/|\\|)doc")) {
         $mappingData.git = $githubLink
         $outputCsv += $mappingData
         return $SourceLink
@@ -70,13 +70,18 @@ function Update-SourceLink {
     if ($svnSourceLink.Contains("@")) {
         $array = $svnSourceLink -split "(/|\\|)(trunk|branches/.*?)/" -split "@" -split "#"
         $directoryPath = $array[3]
-        $revision = $array[4] -replace "`"", ""
+        #$revision = $array[4] -replace "`"", ""
+        if ($svnSourceLink -match "@\d{1,6}") {
+            $revision = $Matches[0] -replace "@", ""
+        }
         if (-not $revision) {
             $mappingData.git = $githubLink
             $outputCsv += $mappingData
             return $SourceLink
         }
-        $line = $array[5] -replace "`"", ""
+        if ($svnSourceLink -match "(#|)L\d{1,4}") {
+            $line = $Matches[0] -replace "#", ""
+        }
         $md5 = Get-MD5Hash $directoryPath
         $hash_repository = & $getHashRepository $revision.Trim()
         $githubLink = "$($hash_repository.Values)/commit/$($hash_repository.keys)#diff-$md5$line"
@@ -130,8 +135,8 @@ function Update-SourceLink {
     else {
         $githubLink = $SourceLink
     }
-    if ($svnSourceLink.Contains("#L")) {
-        $githubLink = $svnSourceLink -replace "#", ""
+    if ($githubLink.Contains("#L")) {
+        $githubLink = $githubLink -replace "#", ""
     }
     if ($githubLink -ne $SourceLink) {
         $githubLink = $githubLink -replace "`"", ""
