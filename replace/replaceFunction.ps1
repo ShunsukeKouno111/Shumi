@@ -33,26 +33,28 @@ function Update-SourceLink {
         return $revision_hash[$args[0]]
     }
 
-    if ($svnSourceLink.Contains("(/|\\|)doc")) {
-        $mappingData.git = $githubLink
-        $outputCsv += $mappingData
+    if ($svnSourceLink.Contains("(/|\\|`"|)(doc|dev|support)(/|\\)")) {
         return $SourceLink
     }
-    if ($svnSourceLink.Contains("\\")) {
-        $svnSourceLink = $svnSourceLink -replace "\\", "/"
+    if ($svnSourceLink -contains "source:src") {
+        $svnSourceLink = $svnSourceLink -replace "source:src", "source:trunk/src"
     }
     if ($svnSourceLink.Contains("../diff/")) {
         $svnSourceLink = $svnSourceLink -replace "../diff/", ""
     }
     if ($svnSourceLink.Contains("pjm:")) {
-        $svnSourceLink = $svnSourceLink -replace "pjm:source:", "source:"
+        $svnSourceLink = $svnSourceLink -replace "pjm:", ""
     }
     if ($svnSourceLink.Contains("iq-core:")) {
-        $svnSourceLink = $svnSourceLink -replace "iq-core:source:", "source:"
+        $svnSourceLink = $svnSourceLink -replace "iq-core:", ""
     }
     if ($svnSourceLink.Contains("`"/")) {
         $svnSourceLink = $svnSourceLink -replace "`"/", "`""
     }
+    if ($svnSourceLink.Contains("TeamSVN")) {
+        $svnSourceLink = $svnSourceLink -replace "TeamSVN", ""
+    }
+
 
     if ($svnSourceLink.Contains("../revisions/")) {
         $array = $svnSourceLink -split "/"
@@ -119,18 +121,18 @@ function Update-SourceLink {
         $githubLink = "$($hash_repository.Values)/commit/$($hash_repository.keys)#diff-$md5$line"
     }
     #ケース1
-    elseif ($svnSourceLink -match "source:(/|\\|)(`"|)trunk(/|\\)") {
-        $githubLink = $svnSourceLink -replace "source:(/|\\|)(`"|)trunk(/|\\)", "https://github.com/ISID/$repositoryName/blob/master/"
+    elseif ($svnSourceLink -match "source:(`"/|`"\\|`"|/|\\|//|)trunk(/|\\)") {
+        $githubLink = $svnSourceLink -replace "source:(`"/|`"\\|`"|/|\\|)trunk(/|\\)", "https://github.com/ISID/$repositoryName/blob/master/"
         $githubLink = $githubLink.Replace("TMC.", "TMC_")
     }
     #ケース4
-    elseif ($svnSourceLink -match "source:(/|\\|)(`"|)branches(/|\\)") {
-        $githubLink = $svnSourceLink -replace "source:(/|\\|)(`"|)branches(/|\\)", "https://github.com/ISID/$repositoryName/blob/"
+    elseif ($svnSourceLink -match "source:(`"/|`"\\|`"|/|\\|//|)branches(/|\\)") {
+        $githubLink = $svnSourceLink -replace "source:(`"/|`"\\|`"|/|\\|)branches(/|\\)", "https://github.com/ISID/$repositoryName/blob/"
         $githubLink = $githubLink.Replace("TMC.", "TMC_")
     }
     #ケース7,10
-    elseif ($svnSourceLink -match "source:(/|\\|)(`"|)plugin/([^/]*?)") {
-        $githubLink = $svnSourceLink -replace "source:(/|\\|)(`"|)plugin/([^/]*?)", "https://github.com/ISID/iQUAVIS-" #ケース7
+    elseif ($svnSourceLink -match "source:(`"/|`"\\|`"|/|\\|//|)plugin/([^/]*?)") {
+        $githubLink = $svnSourceLink -replace "source:(`"/|`"\\|`"|/|\\|)plugin/([^/]*?)", "https://github.com/ISID/iQUAVIS-" #ケース7
         $githubLink = $githubLink -replace "trunk", "blob/master" #ケース7
         $githubLink = $githubLink -replace "branches", "blob" #ケース10
     }
@@ -208,8 +210,8 @@ function Update-DescriptionSourceLink {
         $TicketId
     )
 
-    $updatedDescription = [regex]::Replace($Description, "(pjm:|iq-core:|)source:`".+?`"", { Update-SourceLink -SourceLink $args[0].Groups[0].Value -PluginName $PluginName -TicketId $TicketId })
-    $updatedDescription = [regex]::Replace($updatedDescription, "(pjm:|iq-core:|)source:.+?(\s|\r|\n|\r\n)", { Update-SourceLink -SourceLink $args[0].Groups[0].Value -PluginName $PluginName -TicketId $TicketId })
+    $updatedDescription = [regex]::Replace($Description, "(pjm:|iq-core:|)source:`"(|\r|\n|\r\n).+?`"", { Update-SourceLink -SourceLink $args[0].Groups[0].Value -PluginName $PluginName -TicketId $TicketId })
+    $updatedDescription = [regex]::Replace($updatedDescription, "(pjm:|iq-core:|)source:(|\r|\n|\r\n).+?(\s|\r|\n|\r\n)", { Update-SourceLink -SourceLink $args[0].Groups[0].Value -PluginName $PluginName -TicketId $TicketId })
     return $updatedDescription
 }
 
