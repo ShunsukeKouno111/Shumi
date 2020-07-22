@@ -123,4 +123,19 @@ Describe "Update-DescriptionSourceLink" {
         $GitHubSourceLink = Update-DescriptionSourceLink -Description $SVNSourceLink -PluginName "/TMC/TMC_iSpirit"
         $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS-TMC-iSpirit/blob/master/src/Project/Client/Client.TMC_iSpirit/PluginModule.cs  "
     }
+    It "ケース22" {
+        $SVNSourceLink = "source:`"/trunk/src/net/Project/Client/Module/Common/Util/TaskDtoUtil.cs`""
+        $GitHubSourceLink = Update-DescriptionSourceLink -Description $SVNSourceLink -PluginName ""
+        $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/blob/master/src/net/Project/Client/Module/Common/Util/TaskDtoUtil.cs "
+    }
+    It "ケース23" {
+        $SVNSourceLink = "iq-core:source:`"/trunk/src/net/Unit Test/Client/Module/Test.Common/Managers/Logics/RestrictionItemsLogicTest.Deliverable.cs`""
+        $GitHubSourceLink = Update-DescriptionSourceLink -Description $SVNSourceLink -PluginName ""
+        $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/blob/master/src/net/Unit Test/Client/Module/Test.Common/Managers/Logics/RestrictionItemsLogicTest.Deliverable.cs "
+    }
+    It "ケース24" {
+        $SVNSourceLink = "iq-core:source:`"../diff/trunk/src/net/Project/Client/Module/Rem.Spread/Views/BlockDiagramDSM/BlockDiagramDSMViewModel.OpenCommand.cs?rev=150141&rev_to150028`""
+        $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
+        $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/compare/643b7b1bb1264526c61407a608d41140df424325...711bb77e52cb36e1287185b39a65ed9811d16168#diff-6a2e3ef0b28d30bbe2387a4b5702622c "
+    }
 }

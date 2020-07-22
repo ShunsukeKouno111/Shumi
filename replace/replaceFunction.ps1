@@ -23,8 +23,8 @@ function Update-SourceLink {
     }
 
     # テスト用
-    #$revision_hash = Get-RevisionMappingFile "D:\GitRepository\Shumi\replace\pjm-dev"
-    $mappingData = New-Object PSCustomObject -Property @{ svn = $SourceLink; git = "" }
+    $revision_hash = Get-RevisionMappingFile "D:\GitRepository\Shumi\replace\pjm-dev"
+    $mappingData = New-Object PSCustomObject -Property @{ id = $TicketId; svn = $SourceLink; git = "" }
     $svnSourceLink = $SourceLink
 
     $getHashRepository = {
@@ -47,6 +47,9 @@ function Update-SourceLink {
     }
     if ($svnSourceLink.Contains("iq-core:")) {
         $svnSourceLink = $svnSourceLink -replace "iq-core:source:", "source:"
+    }
+    if ($svnSourceLink.Contains("`"/")) {
+        $svnSourceLink = $svnSourceLink -replace "`"/", "`""
     }
 
     if ($svnSourceLink.Contains("../revisions/")) {
@@ -79,11 +82,11 @@ function Update-SourceLink {
         $githubLink = "$($hash_repository.Values)/commit/$($hash_repository.keys)#diff-$md5$line"
 
     }
-    elseif ($svnSourceLink.Contains("?rev=")) {
-        $array = $svnSourceLink -split "(/|\\|)(trunk|branches/.*?)/" -split "(\\|).rev=" -split ".rev_to="
+    elseif ($svnSourceLink.Contains("rev_to")) {
+        $array = $svnSourceLink -split "(/|\\|)(trunk|branches/.*?)/" -split "(\\|).rev=" -split ".rev_to(=|)"
         $directoryPath = $array[3]
         $revision = $array[5] -replace "`"", ""
-        $toRevision = $array[6] -replace "`"", ""
+        $toRevision = $array[7] -replace "`"", ""
         if (-not $revision) {
             $mappingData.git = $githubLink
             $outputCsv += $mappingData
@@ -93,6 +96,20 @@ function Update-SourceLink {
         $hash_repository = & $getHashRepository $revision.Trim()
         $toHash_repository = & $getHashRepository $toRevision.Trim()
         $githubLink = "$($hash_repository.Values)/compare/$($hash_repository.keys)...$($toHash_repository.keys)#diff-$md5"
+    }
+    elseif ($svnSourceLink.Contains("?rev=")) {
+        $array = $svnSourceLink -split "(/|\\|)(trunk|branches/.*?)/" -split "(\\|).rev=" -split "#"
+        $directoryPath = $array[3]
+        $revision = $array[5] -replace "`"", ""
+        $line = $array[6] -replace "`"", ""
+        if (-not $revision) {
+            $mappingData.git = $githubLink
+            $outputCsv += $mappingData
+            return $SourceLink
+        }
+        $md5 = Get-MD5Hash $directoryPath
+        $hash_repository = & $getHashRepository $revision.Trim()
+        $githubLink = "$($hash_repository.Values)/commit/$($hash_repository.keys)#diff-$md5$line"
     }
     #ケース1
     elseif ($svnSourceLink -match "source:(/|\\|)(`"|)trunk(/|\\)") {
@@ -179,11 +196,13 @@ function Update-DescriptionSourceLink {
         [string]
         $Description,
         [string]
-        $PluginName
+        $PluginName,
+        [int]
+        $TicketId
     )
 
-    $updatedDescription = [regex]::Replace($Description, "(pjm:|iq-core:|)source:`".+?`"", { Update-SourceLink -SourceLink $args[0].Groups[0].Value -PluginName $PluginName })
-    $updatedDescription = [regex]::Replace($updatedDescription, "(pjm:|iq-core:|)source:.+?(\s|\r|\n|\r\n)", { Update-SourceLink -SourceLink $args[0].Groups[0].Value -PluginName $PluginName })
+    $updatedDescription = [regex]::Replace($Description, "(pjm:|iq-core:|)source:`".+?`"", { Update-SourceLink -SourceLink $args[0].Groups[0].Value -PluginName $PluginName -TicketId $TicketId })
+    $updatedDescription = [regex]::Replace($updatedDescription, "(pjm:|iq-core:|)source:.+?(\s|\r|\n|\r\n)", { Update-SourceLink -SourceLink $args[0].Groups[0].Value -PluginName $PluginName -TicketId $TicketId })
     return $updatedDescription
 }
 
@@ -241,7 +260,7 @@ function Update-RedmineSourceLink {
     Add-Type -Path $mySqlDllPath
 
     $DB_NAME = "redmine"
-    $MY_SQL_CONNECTION_STRING = "Server=localhost;Database=$($DB_NAME);Uid=root;Pwd=abcdefgH123" # MySQLのrootアカウントのパスワードで****を更新します。
+    $MY_SQL_CONNECTION_STRING = "Server=localhost; Database=$($DB_NAME); Uid=root; Pwd=abcdefgH123" # MySQLのrootアカウントのパスワードで****を更新します。
     $getReaderValues = {
         $reader = $args[0]
         $values = New-Object object[] ($reader.FieldCount)
@@ -270,12 +289,12 @@ function Update-RedmineSourceLink {
         return $result
     }
 
-    $sql = "select ISSUES.Id,ISSUES.description,REPO.url,REPO.root_url,ISSUES.project_id
+    $sql = "select ISSUES.Id, ISSUES.description, REPO.url, REPO.root_url, ISSUES.project_id
         from ISSUES
         inner join repositories REPO
         on ISSUES.project_id = REPO.project_id
-        where root_url ='$SVNRootURL'
-        order by ISSUES.Id;"
+        Where-Object root_url ='$SVNRootURL'
+        order by ISSUES.Id; "
     $schemaName = "[dbo]"
     try {
         $mySqlCommandResult = & $getMySqlDbCommand
@@ -295,7 +314,7 @@ function Update-RedmineSourceLink {
             if ($SVNRootURL.Contains("iquavis-plugin")) {
                 $pluginName = $mySqlValues[2] -replace $mySqlValues[3], ""
             }
-            $issue.description = Update-DescriptionSourceLink -Description $originalDescription -PluginName $pluginName
+            $issue.description = Update-DescriptionSourceLink -Description $originalDescription -PluginName $pluginName -TicketId $issue.id
             if ($originalDescription -ne $issue.description) {
                 $changedIssues.Add($issue) | Out-Null
             }
@@ -327,7 +346,7 @@ function Update-RedmineSourceLink {
             $description = [MySql.Data.MySqlClient.MySqlHelper]::EscapeString($issue.description)
             $mySqlCommandResult = & $getMySqlDbCommand
             $command = $mySqlCommandResult.Command
-            $updateSql = "UPDATE issues set description = '$description' where id = $($issue.id);"
+            $updateSql = "UPDATE issues set description = '$description' where id = $($issue.id); "
             $command.CommandText = $updateSql
             $command.ExecuteNonQuery() | Out-Null
             "#$($issue.id) is updated."
@@ -359,5 +378,5 @@ function Update-RedmineSourceLink {
     }
 }
 
-Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\pjm-dev" -SVNRootURL "http://ksvnrp05.isid.co.jp/pjm-dev"
-Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\iquavis-plugin" -SVNRootURL "http://ksvnrp16.isid.co.jp/iquavis-plugin"
+# Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\pjm-dev" -SVNRootURL "http://ksvnrp05.isid.co.jp/pjm-dev"
+# Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\iquavis-plugin" -SVNRootURL "http://ksvnrp16.isid.co.jp/iquavis-plugin"
