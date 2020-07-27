@@ -33,7 +33,7 @@ function Update-SourceLink {
         return $revision_hash[$args[0]]
     }
 
-    if ($svnSourceLink -contains "(/|\\|`"|)(doc|dev|support)(/|\\)") {
+    if ($svnSourceLink -contains "/doc/") {
         return $SourceLink
     }
     $svnSourceLink = $svnSourceLink -replace "source:(/|\\|`"/|`"\\|`"|)src", "source:trunk/src"
