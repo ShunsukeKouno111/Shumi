@@ -173,4 +173,19 @@ Describe "Update-DescriptionSourceLink" {
         $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
         $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/blob/master/src\net\Unit Test\Client\Module\Test.Common\Managers\Logics\FilterLogicBaseTest.cs "
     }
+    It "ケース28" {
+        $SVNSourceLink = "source:`"/plugin\DOORS\trunk\src\Unit Test\Client\Test.Client.DOORS\Logics\Import\ReqIFImportLogicTest.cs`""
+        $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
+        $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/blob/master/src\net\Unit Test\Client\Module\Test.Common\Managers\Logics\FilterLogicBaseTest.cs "
+    }
+    It "ケース30" { #/diff/
+        $SVNSourceLink = "source:`"/diff/trunk/src/net/Project/Client/Module/Pro.Spread/Views/Worksheet/WorksheetDataCreator.Matrix.cs`""
+        $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
+        $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/blob/master/src/net/Project/Client/Module/Pro.Spread/Views/Worksheet/WorksheetDataCreator.Matrix.cs "
+    }
+    It "ケース28" { # /trunk
+        $SVNSourceLink = "source:`" /trunk/src/net/Project/Client/Module/Pro.Spread/Views/Worksheet/WorksheetDataCell.cs`""
+        $GitHubSourceLink = Update-DescriptionSourceLink $SVNSourceLink
+        $GitHubSourceLink | Should Be "https://github.com/ISID/iQUAVIS/blob/master/src/net/Project/Client/Module/Pro.Spread/Views/Worksheet/WorksheetDataCell.cs "
+    }
 }

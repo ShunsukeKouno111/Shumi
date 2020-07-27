@@ -39,10 +39,16 @@ function Update-SourceLink {
     # if ($svnSourceLink -notmatch "source:(/|\\|`"/|`"\\|`"|)(trunk|branches(/|\\).*?|plugin.*?)(/|\\)src") {
     #     $svnSourceLink = $svnSourceLink -replace "source:", "source:trunk/src/"
     # }
-    $svnSourceLink = $svnSourceLink -replace "source:(/|\\|`"/|`"\\|)src", "source:trunk/src"
+    $svnSourceLink = $svnSourceLink -replace "source:(/|\\|`"/|`"\\|`"|)src", "source:trunk/src"
     $svnSourceLink = $svnSourceLink -replace "//trunk", "trunk"
+    $svnSourceLink = $svnSourceLink.Replace("\\trunk", "trunk")
+    $svnSourceLink = $svnSourceLink.Replace("./trunk", "trunk")
+    $svnSourceLink = $svnSourceLink.Replace("source:`" ", "source:`"")
     if ($svnSourceLink.Contains("../diff/")) {
         $svnSourceLink = $svnSourceLink -replace "../diff/", ""
+    }
+    if ($svnSourceLink.Contains("/diff/")) {
+        $svnSourceLink = $svnSourceLink -replace "/diff/", ""
     }
     if ($svnSourceLink.Contains("pjm:")) {
         $svnSourceLink = $svnSourceLink -replace "pjm:", ""
