@@ -25,7 +25,7 @@ function Update-SourceLink {
     }
 
     # テスト用
-    $revision_hash = Get-RevisionMappingFile "D:\GitRepository\Shumi\replace\pjm-dev"
+    #$revision_hash = Get-RevisionMappingFile "D:\GitRepository\Shumi\replace\pjm-dev"
     $mappingData = New-Object PSCustomObject -Property @{ id = $TicketId; svn = $SourceLink; git = "" }
     $svnSourceLink = $SourceLink
 
@@ -36,9 +36,6 @@ function Update-SourceLink {
     if ($svnSourceLink -contains "(/|\\|`"|)(doc|dev|support)(/|\\)") {
         return $SourceLink
     }
-    # if ($svnSourceLink -notmatch "source:(/|\\|`"/|`"\\|`"|)(trunk|branches(/|\\).*?|plugin.*?)(/|\\)src") {
-    #     $svnSourceLink = $svnSourceLink -replace "source:", "source:trunk/src/"
-    # }
     $svnSourceLink = $svnSourceLink -replace "source:(/|\\|`"/|`"\\|`"|)src", "source:trunk/src"
     $svnSourceLink = $svnSourceLink -replace "//trunk", "trunk"
     $svnSourceLink = $svnSourceLink.Replace("\\trunk", "trunk")
@@ -86,7 +83,6 @@ function Update-SourceLink {
     if ($svnSourceLink.Contains("@")) {
         $array = $svnSourceLink -split "(/|\\|)(trunk|branches/.*?)/" -split "@" -split "#"
         $directoryPath = $array[3]
-        #$revision = $array[4] -replace "`"", ""
         if ($svnSourceLink -match "@\d{1,6}") {
             $revision = $Matches[0] -replace "@", ""
         }
@@ -100,6 +96,11 @@ function Update-SourceLink {
         }
         $md5 = Get-MD5Hash $directoryPath
         $hash_repository = & $getHashRepository $revision.Trim()
+        if (-not $hash_repository.Values) {
+            $mappingData.git = $githubLink
+            $outputCsv += $mappingData
+            return $SourceLink
+        }
         $githubLink = "$($hash_repository.Values)/commit/$($hash_repository.keys)#diff-$md5$line"
 
     }
@@ -115,6 +116,11 @@ function Update-SourceLink {
         }
         $md5 = Get-MD5Hash $directoryPath
         $hash_repository = & $getHashRepository $revision.Trim()
+        if (-not $hash_repository.Values) {
+            $mappingData.git = $githubLink
+            $outputCsv += $mappingData
+            return $SourceLink
+        }
         $toHash_repository = & $getHashRepository $toRevision.Trim()
         $githubLink = "$($hash_repository.Values)/compare/$($hash_repository.keys)...$($toHash_repository.keys)#diff-$md5"
     }
@@ -130,6 +136,11 @@ function Update-SourceLink {
         }
         $md5 = Get-MD5Hash $directoryPath
         $hash_repository = & $getHashRepository $revision.Trim()
+        if (-not $hash_repository.Values) {
+            $mappingData.git = $githubLink
+            $outputCsv += $mappingData
+            return $SourceLink
+        }
         $githubLink = "$($hash_repository.Values)/commit/$($hash_repository.keys)#diff-$md5$line"
     }
     #ケース1
@@ -143,8 +154,8 @@ function Update-SourceLink {
         $githubLink = $githubLink.Replace("TMC.", "TMC_")
     }
     #ケース7,10
-    elseif ($svnSourceLink -match "source:(`"/|`"\\|`"|/|\\|//|)plugin/([^/]*?)") {
-        $githubLink = $svnSourceLink -replace "source:(`"/|`"\\|`"|/|\\|)plugin/([^/]*?)", "https://github.com/ISID/iQUAVIS-" #ケース7
+    elseif ($svnSourceLink -match "source:(`"/|`"\\|`"|/|\\|//|)plugin(/|\\)([^/]*?)") {
+        $githubLink = $svnSourceLink -replace "source:(`"/|`"\\|`"|/|\\|//|)plugin(/|\\)([^/]*?)", "https://github.com/ISID/iQUAVIS-" #ケース7
         $githubLink = $githubLink -replace "trunk", "blob/master" #ケース7
         $githubLink = $githubLink -replace "branches", "blob" #ケース10
     }
@@ -399,5 +410,5 @@ function Update-RedmineSourceLink {
     }
 }
 
-# Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\pjm-dev" -SVNRootURL "http://ksvnrp05.isid.co.jp/pjm-dev"
-# Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\iquavis-plugin" -SVNRootURL "http://ksvnrp16.isid.co.jp/iquavis-plugin"
+Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\pjm-dev" -SVNRootURL "http://ksvnrp05.isid.co.jp/pjm-dev"
+Update-RedmineSourceLink -CsvRootURL "D:\GitRepository\mappingfile\iquavis-plugin" -SVNRootURL "http://ksvnrp16.isid.co.jp/iquavis-plugin"
